@@ -8,4 +8,4 @@
 def read(filename):
     stream = file(filename, 'r')
     import yaml
-    return yaml.load(stream)
+    return yaml.safe_load(stream)
