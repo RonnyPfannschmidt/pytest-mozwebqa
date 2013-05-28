@@ -5,36 +5,26 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import pytest
-
+import requests
 from webserver import SimpleWebServer
 
 pytest_plugins = 'pytester'
 
 
-def pytest_sessionstart(session):
+def pytest_configure(config):
+    host = config.option.host
+    port = config.option.port
+    try:
+        res = requests.get('http://%s:%s' % (host, port))
+    except:
+        raise pytest.UsageError('need a running selenium-standalone')
+
+
+@pytest.fixture(scope='session', autouse=True)
+def webserver(request):
     webserver = SimpleWebServer()
     webserver.start()
-    WebServer.webserver = webserver
+    request.addfinalizer(webserver.stop)
+    return webserver
 
 
-def pytest_sessionfinish(session, exitstatus):
-    WebServer.webserver.stop()
-
-
-def pytest_internalerror(excrepr):
-    if hasattr(WebServer, 'webserver'):
-        WebServer.webserver.stop()
-
-
-def pytest_keyboard_interrupt(excinfo):
-    if hasattr(WebServer, 'webserver'):
-        WebServer.webserver.stop()
-
-
-def pytest_funcarg__webserver(request):
-    return WebServer.webserver
-
-
-class WebServer:
-
-    pass
