@@ -37,10 +37,6 @@ def pytest_unconfigure(config):
 
 
 def pytest_sessionstart(session):
-    if session.config.option.base_url and not (session.config.option.skip_url_check or session.config.option.collectonly):
-        r = requests.get(session.config.option.base_url, verify=False)
-        assert r.status_code in (200, 401), 'Base URL did not return status code 200 or 401. (URL: %s, Response: %s)' % (session.config.option.base_url, r.status_code)
-
     # configure session proxies
     if hasattr(session.config, 'browsermob_session_proxy'):
         session.config.option.proxy_host = session.config.option.bmp_host
@@ -54,13 +50,23 @@ def pytest_sessionstart(session):
         session.config.option.proxy_port = session.config.option.zap_port
 
 
-#XXX: better name
-@pytest.fixture
-def base_url(request):
+@pytest.fixture(scope='session')
+def selenium_base_url(request):
     url = request.config.option.base_url
     if not url:
         raise pytest.UsageError('--baseurl must be specified.')
     return url
+
+
+@pytest.fixture(scope='session', autouse=True)
+def _verify_base_url(request):
+    option = request.config.option
+    if option.base_url and not option.skip_url_check:
+        r = requests.get(option.base_url, verify=False)
+        if r.status_code not in (200, 401):
+            raise pytest.UsageError(
+                'Base URL did not return status code 200 or 401. '
+                '(URL: %s, Response: %s)' % (option.base_url, r.status_code))
 
 
 def pytest_runtest_setup(item):

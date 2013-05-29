@@ -18,12 +18,12 @@ def pytest_configure(config):
 
 
 @pytest.fixture
-def _sensitive_skiping(request, base_url):
+def _sensitive_skiping(request, selenium_base_url):
     if request.config.option.skip_url_check:
         return
 
     item = request.node
-    r = requests.get(base_url, verify=False)
+    r = requests.get(selenium_base_url, verify=False)
     urls = [h.url for h in r.history] + [r.url]
     def search(url):
         return re.search(request.config.option.sensitive_url, url)
