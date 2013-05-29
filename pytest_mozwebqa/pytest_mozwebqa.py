@@ -12,28 +12,21 @@ import ConfigParser
 import requests
 
 import credentials
+from . import plugin_safety
+
 
 __version__ = '1.1'
 
-def pytest_configure(config):
-    if not hasattr(config, 'slaveinput'):
 
-        config.addinivalue_line(
-            'markers', 'nondestructive: mark the test as nondestructive. ' \
-            'Tests are assumed to be destructive unless this marker is ' \
-            'present. This reduces the risk of running destructive tests ' \
-            'accidentally.')
+def pytest_configure(config):
+    config.pluginmanager.register(plugin_safety)
+    if not hasattr(config, 'slaveinput'):
 
         if config.option.webqa_report_path:
             from html_report import HTMLReport
             config._html = HTMLReport(config)
             config.pluginmanager.register(config._html)
 
-        if not config.option.run_destructive:
-            if config.option.markexpr:
-                config.option.markexpr = 'nondestructive and (%s)' % config.option.markexpr
-            else:
-                config.option.markexpr = 'nondestructive'
 
 
 def pytest_unconfigure(config):
@@ -61,6 +54,13 @@ def pytest_sessionstart(session):
         session.config.option.proxy_port = session.config.option.zap_port
 
 
+#XXX: better name
+@pytest.fixture
+def base_url(request):
+    url = request.config.option.base_url
+    if not url:
+        raise pytest.UsageError('--baseurl must be specified.')
+    return url
 
 
 def pytest_runtest_setup(item):
@@ -77,26 +77,6 @@ def pytest_runtest_setup(item):
         item.config.option.proxy_host = item.config.option.bmp_host
         item.config.option.proxy_port = item.config.browsermob_test_proxy.port
 
-    # consider this environment sensitive if the base url or any redirection
-    # history matches the regular expression
-    sensitive = False
-    if TestSetup.base_url and not item.config.option.skip_url_check:
-        r = requests.get(TestSetup.base_url, verify=False)
-        urls = [h.url for h in r.history] + [r.url]
-        matches = [re.search(item.config.option.sensitive_url, u) for u in urls]
-        sensitive = any(matches)
-
-    destructive = 'nondestructive' not in item.keywords
-
-    if (sensitive and destructive):
-        first_match = matches[next(i for i, match in enumerate(matches) if match)]
-
-        # skip the test with an appropriate message
-        py.test.skip('This test is destructive and the target URL is ' \
-                     'considered a sensitive environment. If this test is ' \
-                     'not destructive, add the \'nondestructive\' marker to ' \
-                     'it. Sensitive URL: %s' % first_match.string)
-
     if item.config.option.sauce_labs_credentials_file:
         item.sauce_labs_credentials = credentials.read(item.config.option.sauce_labs_credentials_file)
     else:
@@ -108,8 +88,8 @@ def pytest_runtest_setup(item):
 
 
 #FIXME: needs autouse till test setup/teardown is cleaned up
-@pytest.fixture(autouse=True)
-def selenium_client(request):
+@pytest.fixture
+def selenium_client(request, _sensitive_skiping):
     item = request.node
     test_id = '.'.join(split_class_and_test_names(item.nodeid))
     if 'skip_selenium' not in item.keywords:

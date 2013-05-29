@@ -10,27 +10,14 @@ pytestmark = pytestmark = [pytest.mark.skip_selenium,
                            pytest.mark.nondestructive]
 
 
-def testDestructiveTestsNotRunByDefault(testdir, webserver):
-    file_test = testdir.makepyfile("""
-        import pytest
-        @pytest.mark.skip_selenium
-        def test_selenium(mozwebqa):
-            assert True
-    """)
-    reprec = testdir.inline_run('--baseurl=http://localhost:%s' % webserver.port, file_test)
-    passed, skipped, failed = reprec.listoutcomes()
-    assert len(passed) == 0
-
-
 def testNonDestructiveTestsRunByDefault(testdir, webserver):
     file_test = testdir.makepyfile("""
         import pytest
-        @pytest.mark.skip_selenium
         @pytest.mark.nondestructive
-        def test_selenium(mozwebqa):
+        def test_selenium():
             assert True
     """)
-    reprec = testdir.inline_run('--baseurl=http://localhost:%s' % webserver.port, file_test)
+    reprec = testdir.inline_run(file_test)
     passed, skipped, failed = reprec.listoutcomes()
     assert len(passed) == 1
 
@@ -38,13 +25,10 @@ def testNonDestructiveTestsRunByDefault(testdir, webserver):
 def testDestructiveTestsRunWhenForced(testdir, webserver):
     file_test = testdir.makepyfile("""
         import pytest
-        @pytest.mark.skip_selenium
-        def test_selenium(mozwebqa):
+        def test_selenium():
             assert True
     """)
-    reprec = testdir.inline_run('--baseurl=http://localhost:%s' % webserver.port,
-                                '--destructive',
-                                file_test)
+    reprec = testdir.inline_run('--destructive', file_test)
     passed, skipped, failed = reprec.listoutcomes()
     assert len(passed) == 1
 
@@ -52,17 +36,13 @@ def testDestructiveTestsRunWhenForced(testdir, webserver):
 def testBothDestructiveAndNonDestructiveTestsRunWhenForced(testdir, webserver):
     file_test = testdir.makepyfile("""
         import pytest
-        @pytest.mark.skip_selenium
         @pytest.mark.nondestructive
-        def test_selenium1(mozwebqa):
+        def test_selenium1():
             assert True
-        @pytest.mark.skip_selenium
-        def test_selenium2(mozwebqa):
+        def test_selenium2():
             assert True
     """)
-    reprec = testdir.inline_run('--baseurl=http://localhost:%s' % webserver.port,
-                                '--destructive',
-                                file_test)
+    reprec = testdir.inline_run('--destructive', file_test)
     passed, skipped, failed = reprec.listoutcomes()
     assert len(passed) == 2
 
@@ -70,7 +50,6 @@ def testBothDestructiveAndNonDestructiveTestsRunWhenForced(testdir, webserver):
 def testSkipDestructiveTestsIfForcedAndRunningAgainstSensitiveURL(testdir, webserver):
     file_test = testdir.makepyfile("""
         import pytest
-        @pytest.mark.skip_selenium
         def test_selenium(mozwebqa):
             assert True
     """)

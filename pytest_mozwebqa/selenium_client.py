@@ -46,9 +46,8 @@ class Client(object):
         self.proxy_port = options.proxy_port
 
     def check_basic_usage(self):
+        pass
 
-        if not self.base_url:
-            raise pytest.UsageError('--baseurl must be specified.')
 
     def check_usage(self):
         self.check_basic_usage()
