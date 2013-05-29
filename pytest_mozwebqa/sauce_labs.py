@@ -66,19 +66,6 @@ class Client(selenium_client.Client):
         self.selenium = webdriver.Remote(command_executor=executor,
                                          desired_capabilities=capabilities)
 
-    def start_rc_client(self):
-        settings = self.common_settings
-        settings.update({'username': self.credentials['username'],
-                         'access-key': self.credentials['api-key'],
-                         'os': self.platform,
-                         'browser': self.browser_name})
-        if self.browser_version:
-            settings['browser-version'] = self.browser_version
-        self.selenium = selenium('ondemand.saucelabs.com', '80',
-                                 json.dumps(settings),
-                                 self.base_url)
-        self.selenium.start()
-
 
 class Job(object):
 
