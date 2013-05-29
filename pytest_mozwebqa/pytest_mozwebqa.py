@@ -6,6 +6,7 @@
 
 import py
 import re
+import pytest
 import ConfigParser
 
 import requests
@@ -60,6 +61,8 @@ def pytest_sessionstart(session):
         session.config.option.proxy_port = session.config.option.zap_port
 
 
+
+
 def pytest_runtest_setup(item):
     item.debug = {
         'urls': [],
@@ -103,8 +106,12 @@ def pytest_runtest_setup(item):
     if item.config.option.credentials_file:
         TestSetup.credentials = credentials.read(item.config.option.credentials_file)
 
-    test_id = '.'.join(split_class_and_test_names(item.nodeid))
 
+#FIXME: needs autouse till test setup/teardown is cleaned up
+@pytest.fixture(autouse=True)
+def selenium_client(request):
+    item = request.node
+    test_id = '.'.join(split_class_and_test_names(item.nodeid))
     if 'skip_selenium' not in item.keywords:
         if item.sauce_labs_credentials is not None:
             from sauce_labs import Client
@@ -123,14 +130,12 @@ def pytest_runtest_setup(item):
         TestSetup.selenium = TestSetup.selenium_client.selenium
         TestSetup.timeout = TestSetup.selenium_client.timeout
         TestSetup.default_implicit_wait = TestSetup.selenium_client.default_implicit_wait
+        request.addfinalizer(TestSetup.selenium_client.stop)
     else:
         TestSetup.timeout = item.config.option.webqatimeout
         TestSetup.selenium = None
 
-
-def pytest_runtest_teardown(item):
-    if hasattr(TestSetup, 'selenium') and TestSetup.selenium and 'skip_selenium' not in item.keywords:
-        TestSetup.selenium_client.stop()
+    #XXX: return value?
 
 
 def pytest_runtest_makereport(__multicall__, item, call):
@@ -156,14 +161,14 @@ def pytest_runtest_makereport(__multicall__, item, call):
     return report
 
 
-def pytest_funcarg__mozwebqa(request):
+@pytest.fixture
+def mozwebqa(request, selenium_client):
     return TestSetup(request)
 
 
 def pytest_addoption(parser):
     config = ConfigParser.ConfigParser(defaults={
         'baseurl': '',
-        'api': 'webdriver'
     })
     config.read('mozwebqa.cfg')
 
