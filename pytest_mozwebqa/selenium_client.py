@@ -91,12 +91,18 @@ class Client(object):
             capabilities['platform'] = self.platform.upper()
             executor = 'http://%s:%s/wd/hub' % (self.host, self.port)
             try:
-                self.selenium = webdriver.Remote(command_executor=executor,
-                                                 desired_capabilities=capabilities or None,
-                                                 browser_profile=profile)
+                self.selenium = webdriver.Remote(
+                    command_executor=executor,
+                    desired_capabilities=capabilities or None,
+                    browser_profile=profile)
             except AttributeError:
-                valid_browsers = [attr for attr in dir(webdriver.DesiredCapabilities) if not attr.startswith('__')]
-                raise AttributeError("Invalid browser name: '%s'. Valid options are: %s" % (self.browser_name, ', '.join(valid_browsers)))
+                valid_browsers = [
+                    attr for attr in dir(webdriver.DesiredCapabilities)
+                    if not attr.startswith('__')
+                ]
+                raise AttributeError(
+                    "Invalid browser name: '%s'. Valid options are: %s" %
+                    (self.browser_name, ', '.join(valid_browsers)))
 
         elif self.driver.upper() == 'CHROME':
             options = None

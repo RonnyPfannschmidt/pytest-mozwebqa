@@ -16,7 +16,6 @@
 """A simple web server for testing purposes."""
 
 import logging
-import os
 import socket
 import threading
 import urllib
@@ -36,7 +35,10 @@ class HtmlOnlyHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header('Content-type', 'text/html')
         self.end_headers()
-        self.wfile.write('<html><body><h1>Success!</h1><a href="#">Anchor text</a></body></html>')
+        self.wfile.write(
+            '<html><body><h1>Success!</h1>'
+            '<a href="#">Anchor text</a></body></html>'
+        )
 
     def log_message(self, format, *args):
         """Override default to avoid trashing stderr"""
@@ -56,8 +58,7 @@ class SimpleWebServer(object):
                 self.port = port
                 break
             except socket.error:
-                LOGGER.debug("port %d is in use, trying to use next one"
-                              % port)
+                LOGGER.debug("port %d is in use, trying to use next one", port)
                 port += 1
 
         self.thread = threading.Thread(target=self._run_web_server)
@@ -94,9 +95,10 @@ def main(argv=None):
         argv = sys.argv
 
     parser = OptionParser("%prog [options]")
-    parser.add_option("-p", "--port", dest="port", type="int",
-            help="port to listen (default: %s)" % DEFAULT_PORT,
-            default=DEFAULT_PORT)
+    parser.add_option(
+        "-p", "--port", dest="port", type="int",
+        help="port to listen (default: %s)" % DEFAULT_PORT,
+        default=DEFAULT_PORT)
 
     opts, args = parser.parse_args(argv[1:])
     if args:

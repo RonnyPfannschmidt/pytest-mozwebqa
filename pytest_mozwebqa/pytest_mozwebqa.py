@@ -69,6 +69,8 @@ def _verify_base_url(request):
                 '(URL: %s, Response: %s)' % (option.base_url, r.status_code))
 
 
+
+
 def pytest_runtest_setup(item):
     item.debug = {
         'urls': [],
