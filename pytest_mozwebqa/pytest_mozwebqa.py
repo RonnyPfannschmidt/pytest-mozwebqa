@@ -52,7 +52,7 @@ def pytest_sessionstart(session):
 
 @pytest.fixture(scope='session')
 def selenium_base_url(request):
-    url = request.config.option.base_url
+    url = request.config.option.base_url or request.config.getini('selenium_base_url')
     if not url:
         raise pytest.UsageError('--baseurl must be specified.')
     return url
@@ -153,16 +153,14 @@ def mozwebqa(request, selenium_client):
 
 
 def pytest_addoption(parser):
-    config = ConfigParser.ConfigParser(defaults={
-        'baseurl': '',
-    })
-    config.read('mozwebqa.cfg')
+
+    parser.addini('selenium_base_url', 'base url for the selenium web tests')
 
     group = parser.getgroup('selenium', 'selenium')
     group._addoption('--baseurl',
                      action='store',
                      dest='base_url',
-                     default=config.get('DEFAULT', 'baseurl'),
+                     default=None,
                      metavar='url',
                      help='base url for the application under test.')
     group._addoption('--skipurlcheck',
