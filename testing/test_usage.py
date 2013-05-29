@@ -4,215 +4,96 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from functools import partial
 import pytest
 
 pytestmark = pytestmark = [pytest.mark.skip_selenium,
                            pytest.mark.nondestructive]
 
 
-def testShouldFailWithoutBaseURL(testdir, webserver):
-    file_test = testdir.makepyfile("""
+@pytest.fixture
+def file_test(testdir):
+    return testdir.makepyfile("""
         import pytest
         @pytest.mark.nondestructive
         def test_selenium(mozwebqa):
             assert True
     """)
-    reprec = testdir.inline_run(file_test)
-    passed, skipped, failed = reprec.listoutcomes()
-    assert len(failed) == 1
-    out = failed[0].longrepr.reprcrash.message
+
+
+@pytest.fixture
+def simple_failtest(testdir, file_test):
+
+    def failtest(*k, **kw):
+        reprec = testdir.inline_run('--tb=short', file_test, *k, **kw)
+        passed, skipped, failed = reprec.listoutcomes()
+        assert len(failed) == 1
+        out = failed[0].longrepr.reprcrash.message
+        return out
+    return failtest
+
+
+@pytest.fixture
+def url_failtest(simple_failtest, webserver_baseurl):
+    return partial(simple_failtest, webserver_baseurl)
+
+
+def testShouldFailWithoutBaseURL(simple_failtest):
+    out = simple_failtest()
     assert out == 'UsageError: --baseurl must be specified.'
 
 
-def testShouldFailWithoutBrowserNameWhenUsingWebDriverAPI(testdir, webserver):
-    file_test = testdir.makepyfile("""
-        import pytest
-        @pytest.mark.nondestructive
-        def test_selenium(mozwebqa):
-            assert True
-    """)
-    reprec = testdir.inline_run('--baseurl=http://localhost:%s' % webserver.port, file_test)
-    passed, skipped, failed = reprec.listoutcomes()
-    assert len(failed) == 1
-    out = failed[0].longrepr.reprcrash.message
-    assert out == 'UsageError: --browsername must be specified when using ' \
-                  "the 'webdriver' api."
+def testShouldFailWithoutBrowserNameWhenUsingWebDriverAPI(url_failtest):
+    out = url_failtest()
+    assert out == 'UsageError: --browsername must be specified when using remote selenium.'
 
 
-def testShouldFailWithoutPlatformWhenUsingWebDriverAPI(testdir, webserver):
-    file_test = testdir.makepyfile("""
-        import pytest
-        @pytest.mark.nondestructive
-        def test_selenium(mozwebqa):
-            assert True
-    """)
-    reprec = testdir.inline_run('--baseurl=http://localhost:%s' % webserver.port,
-                                '--browsername=firefox',
-                                file_test)
-    passed, skipped, failed = reprec.listoutcomes()
-    assert len(failed) == 1
-    out = failed[0].longrepr.reprcrash.message
-    assert out == 'UsageError: --platform must be specified when using the ' \
-                  "'webdriver' api."
+def testShouldFailWithoutPlatformWhenUsingWebDriverAPI(url_failtest):
+    out = url_failtest('--browsername=firefox')
+    assert out == 'UsageError: --platform must be specified when using remote selenium.'
 
 
-def testShouldFailWithoutSauceLabsUser(testdir, webserver):
-    file_test = testdir.makepyfile("""
-        import pytest
-        @pytest.mark.nondestructive
-        def test_selenium(mozwebqa):
-            assert True
-    """)
+def testShouldFailWithoutSauceLabsUser(testdir, url_failtest):
     sauce_labs_credentials = testdir.makefile('.yaml', sauce_labs="""
         api-key: api-key
     """)
-    reprec = testdir.inline_run('--baseurl=http://localhost:%s' % webserver.port,
-                                '--saucelabs=%s' % sauce_labs_credentials,
-                                file_test)
-    passed, skipped, failed = reprec.listoutcomes()
-    assert len(failed) == 1
-    out = failed[0].longrepr.reprcrash.message
+    out = url_failtest('--saucelabs=%s' % sauce_labs_credentials)
     assert out == "KeyError: 'username'"
 
 
-def testShouldFailWithoutSauceLabsKey(testdir, webserver):
-    file_test = testdir.makepyfile("""
-        import pytest
-        @pytest.mark.nondestructive
-        def test_selenium(mozwebqa):
-            assert True
-    """)
+def testShouldFailWithoutSauceLabsKey(testdir, url_failtest):
     sauce_labs_credentials = testdir.makefile('.yaml', sauce_labs="""
         username: username
     """)
-    reprec = testdir.inline_run('--baseurl=http://localhost:%s' % webserver.port,
-                                '--saucelabs=%s' % sauce_labs_credentials,
-                                file_test)
-    passed, skipped, failed = reprec.listoutcomes()
-    assert len(failed) == 1
-    out = failed[0].longrepr.reprcrash.message
+    out = url_failtest('--saucelabs=%s' % sauce_labs_credentials)
     assert out == "KeyError: 'api-key'"
 
 
-def testShouldFailWithBlankSauceLabsUser(testdir, webserver):
-    file_test = testdir.makepyfile("""
-        import pytest
-        @pytest.mark.nondestructive
-        def test_selenium(mozwebqa):
-            assert True
-    """)
+def testShouldFailWithBlankSauceLabsUser(testdir, url_failtest):
     sauce_labs_credentials = testdir.makefile('.yaml', sauce_labs="""
         username:
         api-key: api-key
     """)
-    reprec = testdir.inline_run('--baseurl=http://localhost:%s' % webserver.port,
-                                '--saucelabs=%s' % sauce_labs_credentials,
-                                file_test)
-    passed, skipped, failed = reprec.listoutcomes()
-    assert len(failed) == 1
-    out = failed[0].longrepr.reprcrash.message
+    out = url_failtest('--saucelabs=%s' % sauce_labs_credentials)
     assert out == 'UsageError: username must be specified in the sauce labs ' \
                   'credentials file.'
 
 
-def testShouldFailWithBlankSauceLabsKey(testdir, webserver):
-    file_test = testdir.makepyfile("""
-        import pytest
-        @pytest.mark.nondestructive
-        def test_selenium(mozwebqa):
-            assert True
-    """)
+def testShouldFailWithBlankSauceLabsKey(testdir, url_failtest):
     sauce_labs_credentials = testdir.makefile('.yaml', sauce_labs="""
         username: username
         api-key:
     """)
-    reprec = testdir.inline_run('--baseurl=http://localhost:%s' % webserver.port,
-                                '--saucelabs=%s' % sauce_labs_credentials,
-                                file_test)
-    passed, skipped, failed = reprec.listoutcomes()
-    assert len(failed) == 1
-    out = failed[0].longrepr.reprcrash.message
+    out = url_failtest('--saucelabs=%s' % sauce_labs_credentials)
     assert out == 'UsageError: api-key must be specified in the sauce labs ' \
                   'credentials file.'
 
 
-def testShouldFailWithoutBrowserNameWhenUsingSauceWithRCAPI(testdir, webserver):
-    file_test = testdir.makepyfile("""
-        import pytest
-        @pytest.mark.nondestructive
-        def test_selenium(mozwebqa):
-            assert True
-    """)
-    sauce_labs_credentials = testdir.makefile('.yaml', sauce_labs="""
-        username: username
-        api-key: api-key
-    """)
-    reprec = testdir.inline_run('--baseurl=http://localhost:%s' % webserver.port,
-                                '--api=rc',
-                                '--saucelabs=%s' % sauce_labs_credentials,
-                                file_test)
-    passed, skipped, failed = reprec.listoutcomes()
-    assert len(failed) == 1
-    out = failed[0].longrepr.reprcrash.message
-    assert out == 'UsageError: --browsername must be specified when using ' \
-                  "the 'rc' api with sauce labs."
 
-
-def testShouldFailWithoutPlatformWhenUsingSauceWithRCAPI(testdir, webserver):
-    file_test = testdir.makepyfile("""
-        import pytest
-        @pytest.mark.nondestructive
-        def test_selenium(mozwebqa):
-            assert True
-    """)
-    sauce_labs_credentials = testdir.makefile('.yaml', sauce_labs="""
-        username: username
-        api-key: api-key
-    """)
-    reprec = testdir.inline_run('--baseurl=http://localhost:%s' % webserver.port,
-                                '--api=rc',
-                                '--saucelabs=%s' % sauce_labs_credentials,
-                                '--browsername=firefox',
-                                '--browserver=10',
-                                file_test)
-    passed, skipped, failed = reprec.listoutcomes()
-    assert len(failed) == 1
-    out = failed[0].longrepr.reprcrash.message
-    assert out == 'UsageError: --platform must be specified when using the ' \
-                  "'rc' api with sauce labs."
-
-
-def testShouldFailWithoutBrowserOrEnvironmentWhenUsingRCAPI(testdir, webserver):
-    file_test = testdir.makepyfile("""
-        import pytest
-        @pytest.mark.nondestructive
-        def test_selenium(mozwebqa):
-            assert True
-    """)
-    reprec = testdir.inline_run('--baseurl=http://localhost:%s' % webserver.port,
-                                '--api=rc',
-                                file_test)
-    passed, skipped, failed = reprec.listoutcomes()
-    assert len(failed) == 1
-    out = failed[0].longrepr.reprcrash.message
-    assert out == 'UsageError: --browser or --environment must be specified ' \
-                  "when using the 'rc' api."
-
-
-def testShouldErrorThatItCantFindTheChromeBinary(testdir, webserver):
-    file_test = testdir.makepyfile("""
-        import pytest
-        @pytest.mark.nondestructive
-        def test_selenium(mozwebqa):
-            assert True
-    """)
-    reprec = testdir.inline_run('--baseurl=http://localhost:%s' % webserver.port,
-                                '--driver=chrome',
-                                '--chromeopts={"binary_location":"foo"}',
-                                file_test)
-    passed, skipped, failed = reprec.listoutcomes()
-    assert len(failed) == 1
-    out = failed[0].longrepr.reprcrash.message
+@pytest.mark.chrome
+def testShouldErrorThatItCantFindTheChromeBinary(url_failtest):
+    out = url_failtest('--driver=chrome',
+                       '--chromeopts={"binary_location":"foo"}')
     if 'ChromeDriver executable needs to be available in the path' in out:
         pytest.fail('You must have Chrome Driver installed on your path for this test to run correctly. '
                     'For further information see pytest-mozwebqa documentation.')

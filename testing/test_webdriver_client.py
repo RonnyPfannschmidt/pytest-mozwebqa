@@ -10,7 +10,7 @@ pytestmark = pytestmark = [pytest.mark.skip_selenium,
                            pytest.mark.nondestructive]
 
 
-def testStartWebDriverClient(testdir, webserver):
+def testStartWebDriverClient(testdir, webserver_baseurl):
     file_test = testdir.makepyfile("""
         import pytest
         @pytest.mark.nondestructive
@@ -19,8 +19,7 @@ def testStartWebDriverClient(testdir, webserver):
             header = mozwebqa.selenium.find_element_by_tag_name('h1')
             assert header.text == 'Success!'
     """)
-    reprec = testdir.inline_run('--baseurl=http://localhost:%s' % webserver.port,
-                                '--api=webdriver',
+    reprec = testdir.inline_run(webserver_baseurl,
                                 '--driver=firefox',
                                 file_test)
     passed, skipped, failed = reprec.listoutcomes()
@@ -50,7 +49,6 @@ def testSpecifyingFirefoxProfile(testdir, webserver):
             assert anchor_color == 'rgba(255, 105, 180, 1)'
     """)
     reprec = testdir.inline_run('--baseurl=http://localhost:%s' % webserver.port,
-                                '--api=webdriver',
                                 '--driver=firefox',
                                 '--profilepath=%s' % profile,
                                 file_test)
@@ -82,7 +80,6 @@ def testSpecifyingFirefoxProfileAndOverridingPreferences(testdir, webserver):
             assert anchor_color == 'rgba(255, 0, 0, 1)'
     """)
     reprec = testdir.inline_run('--baseurl=http://localhost:%s' % webserver.port,
-                                '--api=webdriver',
                                 '--driver=firefox',
                                 '--firefoxpref=''{"browser.anchor_color":"#FF0000"}''',
                                 '--profilepath=%s' % profile,
@@ -105,7 +102,6 @@ def testAddingFirefoxExtension(testdir, webserver):
             assert 'Test Extension (empty)' in extensions
     """)
     reprec = testdir.inline_run('--baseurl=http://localhost:%s' % webserver.port,
-                                '--api=webdriver',
                                 '--driver=firefox',
                                 '--extension=''%s''' % extension,
                                 file_test)
@@ -123,7 +119,6 @@ def testFirefoxProxy(testdir, webserver):
             assert header.text == 'Success!'
     """)
     reprec = testdir.inline_run('--baseurl=http://localhost:%s' % webserver.port,
-        '--api=webdriver',
         '--driver=firefox',
         '--proxyhost=localhost',
         '--proxyport=%s' % webserver.port,
@@ -143,7 +138,6 @@ def testChromeProxy(testdir, webserver):
             assert header.text == 'Success!'
     """)
     reprec = testdir.inline_run('--baseurl=http://localhost:%s' % webserver.port,
-        '--api=webdriver',
         '--driver=chrome',
         '--proxyhost=localhost',
         '--proxyport=%s' % webserver.port,
@@ -163,7 +157,6 @@ def testOperaProxy(testdir, webserver):
             assert header.text == 'Success!'
     """)
     reprec = testdir.inline_run('--baseurl=http://localhost:%s' % webserver.port,
-        '--api=webdriver',
         '--driver=opera',
         '--proxyhost=localhost',
         '--proxyport=%s' % webserver.port,

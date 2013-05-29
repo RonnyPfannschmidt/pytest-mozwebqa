@@ -17,12 +17,7 @@ def testWebDriverWithDefaultTimeout(testdir, webserver):
         def test_timeout(mozwebqa):
             assert mozwebqa.timeout == 60
     """)
-    reprec = testdir.inline_run('--baseurl=http://localhost:%s' % webserver.port,
-                                '--api=webdriver',
-                                '--driver=firefox',
-                                file_test)
-    passed, skipped, failed = reprec.listoutcomes()
-    assert len(passed) == 1
+    testdir.quick_qa(file_test, passed=1)
 
 
 def testWebDriverWithCustomTimeout(testdir, webserver):
@@ -32,41 +27,4 @@ def testWebDriverWithCustomTimeout(testdir, webserver):
         def test_timeout(mozwebqa):
             assert mozwebqa.timeout == 30
     """)
-    reprec = testdir.inline_run('--baseurl=http://localhost:%s' % webserver.port,
-                                '--api=webdriver',
-                                '--driver=firefox',
-                                '--webqatimeout=30',
-                                file_test)
-    passed, skipped, failed = reprec.listoutcomes()
-    assert len(passed) == 1
-
-
-def testRCWithDefaultTimeout(testdir, webserver):
-    file_test = testdir.makepyfile("""
-        import pytest
-        @pytest.mark.nondestructive
-        def test_timeout(mozwebqa):
-            assert mozwebqa.timeout == 60000
-    """)
-    reprec = testdir.inline_run('--baseurl=http://localhost:%s' % webserver.port,
-                                '--api=rc',
-                                '--browser=*firefox',
-                                file_test)
-    passed, skipped, failed = reprec.listoutcomes()
-    assert len(passed) == 1
-
-
-def testRCWithCustomTimeout(testdir, webserver):
-    file_test = testdir.makepyfile("""
-        import pytest
-        @pytest.mark.nondestructive
-        def test_timeout(mozwebqa):
-            assert mozwebqa.timeout == 30000
-    """)
-    reprec = testdir.inline_run('--baseurl=http://localhost:%s' % webserver.port,
-                                '--api=rc',
-                                '--browser=*firefox',
-                                '--webqatimeout=30',
-                                file_test)
-    passed, skipped, failed = reprec.listoutcomes()
-    assert len(passed) == 1
+    testdir.quick_qa('--webqatimeout=30', file_test, passed=1)

@@ -96,6 +96,9 @@ def pytest_runtest_setup(item):
 
     if item.config.option.sauce_labs_credentials_file:
         item.sauce_labs_credentials = credentials.read(item.config.option.sauce_labs_credentials_file)
+    else:
+        item.sauce_labs_credentials = None
+
 
     if item.config.option.credentials_file:
         TestSetup.credentials = credentials.read(item.config.option.credentials_file)
@@ -103,7 +106,7 @@ def pytest_runtest_setup(item):
     test_id = '.'.join(split_class_and_test_names(item.nodeid))
 
     if 'skip_selenium' not in item.keywords:
-        if hasattr(item, 'sauce_labs_credentials'):
+        if item.sauce_labs_credentials is not None:
             from sauce_labs import Client
             TestSetup.selenium_client = Client(
                 test_id,
@@ -142,11 +145,7 @@ def pytest_runtest_makereport(__multicall__, item, call):
                 screenshot and item.debug['screenshots'].append(screenshot)
                 html = TestSetup.selenium_client.html
                 html and item.debug['html'].append(html)
-                log = TestSetup.selenium_client.log
-                log and item.debug['logs'].append(log)
                 report.sections.append(('pytest-mozwebqa', _debug_summary(item.debug)))
-            network_traffic = TestSetup.selenium_client.network_traffic
-            network_traffic and item.debug['network_traffic'].append(network_traffic)
             report.debug = item.debug
             if hasattr(item, 'sauce_labs_credentials') and report.session_id:
                 result = {'passed': report.passed or (report.failed and 'xfail' in report.keywords)}
@@ -180,11 +179,6 @@ def pytest_addoption(parser):
                      dest='skip_url_check',
                      default=False,
                      help='skip the base url and sensitivity checks. (default: %default)')
-    group._addoption('--api',
-                     action='store',
-                     default=config.get('DEFAULT', 'api'),
-                     metavar='api',
-                     help="version of selenium api to use. 'rc' uses selenium rc. 'webdriver' uses selenium webdriver. (default: %default)")
     group._addoption('--host',
                      action='store',
                      default='localhost',
@@ -242,16 +236,6 @@ def pytest_addoption(parser):
                      dest='opera_path',
                      metavar='path',
                      help='path to the opera driver.')
-    group._addoption('--browser',
-                     action='store',
-                     dest='browser',
-                     metavar='str',
-                     help='target browser (standalone rc server).')
-    group._addoption('--environment',
-                     action='store',
-                     dest='environment',
-                     metavar='str',
-                     help='target environment (grid rc).')
     group._addoption('--browsername',
                      action='store',
                      dest='browser_name',

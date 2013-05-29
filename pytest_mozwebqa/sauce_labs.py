@@ -38,12 +38,6 @@ class Client(selenium_client.Client):
         if not self.credentials['api-key']:
             raise pytest.UsageError('api-key must be specified in the sauce labs credentials file.')
 
-    def check_rc_usage(self):
-        if not self.browser_name:
-            raise pytest.UsageError("--browsername must be specified when using the 'rc' api with sauce labs.")
-
-        if not self.platform:
-            raise pytest.UsageError("--platform must be specified when using the 'rc' api with sauce labs.")
 
     @property
     def common_settings(self):

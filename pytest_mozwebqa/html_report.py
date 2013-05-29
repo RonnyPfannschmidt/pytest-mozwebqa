@@ -187,31 +187,26 @@ class HTMLReport(object):
         suite_time_delta = suite_stop_time - self.suite_start_time
         numtests = self.passed + self.failed + self.xpassed + self.xfailed
 
-        server = self.config.option.sauce_labs_credentials_file and \
-                 'Sauce Labs' or 'http://%s:%s' % (self.config.option.host, self.config.option.port)
-        browser = self.config.option.browser_name and \
-                  self.config.option.browser_version and \
-                  self.config.option.platform and \
-                  '%s %s on %s' % (str(self.config.option.browser_name).title(),
-                                   self.config.option.browser_version,
-                                   str(self.config.option.platform).title()) or \
-                  self.config.option.environment or \
-                  self.config.option.browser
+        option = self.config.option
 
+        server = option.sauce_labs_credentials_file and \
+                 'Sauce Labs' or 'http://%s:%s' % (option.host, option.port)
+        browser = '%s %s on %s' % (str(option.browser_name).title(),
+                                   option.browser_version,
+                                   str(option.platform).title())
         generated = datetime.datetime.now()
         configuration = {
-            'Base URL': self.config.option.base_url,
-            'Build': self.config.option.build,
-            'Selenium API': self.config.option.api,
-            'Driver': self.config.option.driver,
-            'Firefox Path': self.config.option.firefox_path,
-            'Google Chrome Path': self.config.option.chrome_path,
+            'Base URL': option.base_url,
+            'Build': option.build,
+            'Driver': option.driver,
+            'Firefox Path': option.firefox_path,
+            'Google Chrome Path': option.chrome_path,
             'Selenium Server': server,
             'Browser': browser,
-            'Timeout': self.config.option.webqatimeout,
-            'Capture Network Traffic': self.config.option.capture_network,
-            'Credentials': self.config.option.credentials_file,
-            'Sauce Labs Credentials': self.config.option.sauce_labs_credentials_file}
+            'Timeout': option.webqatimeout,
+            'Capture Network Traffic': option.capture_network,
+            'Credentials': option.credentials_file,
+            'Sauce Labs Credentials': option.sauce_labs_credentials_file}
 
         import pytest_mozwebqa
         doc = html.html(
