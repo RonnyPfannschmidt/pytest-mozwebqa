@@ -6,23 +6,21 @@ import re
 def pytest_addoption(parser):
     group = parser.getgroup('safety', 'safety')
     group._addoption('--sensitiveurl',
-                     action='store',
                      dest='sensitive_url',
                      default='mozilla\.(com|org)',
-                     metavar='str',
                      help='regular expression for identifying sensitive urls.'
                           ' (default: %default)')
     group._addoption('--destructive',
                      action='store_true',
                      dest='run_destructive',
-                     default=False,
-                     help='include destructive tests (tests not explicitly marked as \'nondestructive\'). (default: %default)')
-
+                     help='include destructive tests (tests '
+                          'not explicitly marked as \'nondestructive\').'
+                          ' (default: %default)')
 
 
 def pytest_configure(config):
     if hasattr(config, 'slaveinput'):
-        return # xdist slave
+        return  # xdist slave
     config.addinivalue_line(
         'markers', 'nondestructive: mark the test as nondestructive. ' \
         'Tests are assumed to be destructive unless this marker is ' \
