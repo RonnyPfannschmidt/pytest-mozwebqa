@@ -17,16 +17,13 @@ from . import plugin_safety
 
 __version__ = '1.1'
 
-
 def pytest_configure(config):
-    config.pluginmanager.register(plugin_safety)
     if not hasattr(config, 'slaveinput'):
 
         if config.option.webqa_report_path:
             from html_report import HTMLReport
             config._html = HTMLReport(config)
             config.pluginmanager.register(config._html)
-
 
 
 def pytest_unconfigure(config):
@@ -272,19 +269,6 @@ def pytest_addoption(parser):
                      dest='proxy_port',
                      metavar='int',
                      help='use a proxy running on this port.')
-
-    group = parser.getgroup('safety', 'safety')
-    group._addoption('--sensitiveurl',
-                     action='store',
-                     dest='sensitive_url',
-                     default='mozilla\.(com|org)',
-                     metavar='str',
-                     help='regular expression for identifying sensitive urls. (default: %default)')
-    group._addoption('--destructive',
-                     action='store_true',
-                     dest='run_destructive',
-                     default=False,
-                     help='include destructive tests (tests not explicitly marked as \'nondestructive\'). (default: %default)')
 
     group = parser.getgroup('credentials', 'credentials')
     group._addoption("--credentials",

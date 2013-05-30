@@ -1,24 +1,38 @@
 from setuptools import setup
 
-setup(name='pytest-mozwebqa',
-      version='1.1',
-      description='Mozilla WebQA plugin for py.test.',
-      author='Dave Hunt',
-      author_email='dhunt@mozilla.com',
-      url='https://github.com/davehunt/pytest-mozwebqa',
-      packages=['pytest_mozwebqa'],
-      package_data={'pytest_mozwebqa': ['resources/style.css', 'resources/main.js', 'resources/jquery.js']},
-      py_modules=[
+setup(
+    name='pytest-mozwebqa',
+    version='1.1',
+    description='Mozilla WebQA plugin for py.test.',
+    author='Dave Hunt',
+    author_email='dhunt@mozilla.com',
+    url='https://github.com/davehunt/pytest-mozwebqa',
+    packages=['pytest_mozwebqa'],
+    package_data={
+        'pytest_mozwebqa': [
+            'resources/style.css',
+            'resources/main.js',
+            'resources/jquery.js']},
+    py_modules=[
         'pytest_mozwebqa.pytest_mozwebqa',
         'pytest_mozwebqa.credentials',
         'pytest_mozwebqa.html_report',
         'pytest_mozwebqa.selenium_client',
         'pytest_mozwebqa.sauce_labs'],
-      install_requires=['pytest>=2.2.4', 'selenium>=2.26.0', 'pyyaml', 'requests'],
-      entry_points={'pytest11': ['pytest_mozwebqa = pytest_mozwebqa.pytest_mozwebqa']},
-      license='Mozilla Public License 2.0 (MPL 2.0)',
-      keywords='py.test pytest selenium saucelabs mozwebqa webqa qa mozilla',
-      classifiers=[
+    install_requires=[
+        'pytest>=2.2.4',
+        'selenium>=2.26.0',
+        'pyyaml',
+        'requests',
+    ],
+    entry_points={
+        'pytest11': [
+            'mozwebqa = pytest_mozwebqa.pytest_mozwebqa',
+            'mozwebqa_safety = pytest_mozwebqa.plugin_safety',
+        ]},
+    license='Mozilla Public License 2.0 (MPL 2.0)',
+    keywords='py.test pytest selenium saucelabs mozwebqa webqa qa mozilla',
+    classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)',
