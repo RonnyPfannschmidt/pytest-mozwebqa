@@ -17,20 +17,8 @@ from . import plugin_safety
 
 __version__ = '1.1'
 
-def pytest_configure(config):
-    if not hasattr(config, 'slaveinput'):
-
-        if config.option.webqa_report_path:
-            from html_report import HTMLReport
-            config._html = HTMLReport(config)
-            config.pluginmanager.register(config._html)
 
 
-def pytest_unconfigure(config):
-    html = getattr(config, '_html', None)
-    if html:
-        del config._html
-        config.pluginmanager.unregister(html)
 
 
 def pytest_sessionstart(session):
@@ -282,13 +270,6 @@ def pytest_addoption(parser):
                      metavar='path',
                      help='credendials file containing sauce labs username and api key.')
 
-    group = parser.getgroup("terminal reporting")
-    group.addoption('--webqareport',
-                    action='store',
-                    dest='webqa_report_path',
-                    metavar='path',
-                    default='results/index.html',
-                    help='create mozilla webqa custom report file at given path. (default: %default)')
 
 
 def split_class_and_test_names(nodeid):

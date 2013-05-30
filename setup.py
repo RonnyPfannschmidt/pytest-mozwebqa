@@ -29,6 +29,7 @@ setup(
         'pytest11': [
             'mozwebqa = pytest_mozwebqa.pytest_mozwebqa',
             'mozwebqa_safety = pytest_mozwebqa.plugin_safety',
+            'mozwebqa_reporting = pytest_mozwebqa.plugin_reporting',
         ]},
     license='Mozilla Public License 2.0 (MPL 2.0)',
     keywords='py.test pytest selenium saucelabs mozwebqa webqa qa mozilla',
