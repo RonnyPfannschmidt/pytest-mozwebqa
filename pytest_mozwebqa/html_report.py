@@ -71,12 +71,6 @@ class HTMLReport(object):
                 f.write(report.debug['logs'][-1])
                 links.update({'Log': os.path.join(relative_path, filename)})
 
-            if report.debug['network_traffic']:
-                filename = 'networktraffic.json'
-                f = open(os.path.join(full_path, filename), 'wb')
-                f.write(report.debug['network_traffic'][-1])
-                links.update({'Network Traffic': os.path.join(relative_path, filename)})
-
             if report.debug['urls']:
                 links.update({'Failing URL': report.debug['urls'][-1]})
 
@@ -204,7 +198,6 @@ class HTMLReport(object):
             'Selenium Server': server,
             'Browser': browser,
             'Timeout': option.webqatimeout,
-            'Capture Network Traffic': option.capture_network,
             'Credentials': option.credentials_file,
             'Sauce Labs Credentials': option.sauce_labs_credentials_file}
 

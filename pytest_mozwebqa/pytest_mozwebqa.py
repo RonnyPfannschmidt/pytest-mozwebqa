@@ -232,11 +232,6 @@ def pytest_addoption(parser):
                      default=60,
                      metavar='num',
                      help='timeout (in seconds) for page loads, etc. (default: %default)')
-    group._addoption('--capturenetwork',
-                     action='store_true',
-                     dest='capture_network',
-                     default=False,
-                     help='capture network traffic to test_method_name.json (selenium rc). (default: %default)')
     group._addoption('--build',
                      action='store',
                      dest='build',

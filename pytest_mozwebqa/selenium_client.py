@@ -38,7 +38,6 @@ class Client(object):
             self.platform = options.platform
 
 
-        self.capture_network = options.capture_network
         self.default_implicit_wait = 10
         self.sauce_labs_credentials = options.sauce_labs_credentials_file
         self.assume_untrusted = options.assume_untrusted
