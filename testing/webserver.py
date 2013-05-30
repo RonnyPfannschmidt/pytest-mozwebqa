@@ -62,6 +62,7 @@ class SimpleWebServer(object):
                 port += 1
 
         self.thread = threading.Thread(target=self._run_web_server)
+        self.thread.daemon = True
 
     def _run_web_server(self):
         """Runs the server loop."""
