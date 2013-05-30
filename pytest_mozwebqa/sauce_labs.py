@@ -39,27 +39,30 @@ class Client(selenium_client.Client):
             raise pytest.UsageError('api-key must be specified in the sauce labs credentials file.')
 
 
-    @property
-    def common_settings(self):
+    def get_cappabilities(self):
         config = ConfigParser.ConfigParser(defaults={'tags': ''})
         config.read('mozwebqa.cfg')
         tags = config.get('DEFAULT', 'tags').split(',')
         from _pytest.mark import MarkInfo
         tags.extend([mark for mark in self.keywords.keys() if isinstance(self.keywords[mark], MarkInfo)])
-        return {'build': self.build or None,
-                'name': self.test_id,
-                'tags': tags,
-                'public': 'private' not in self.keywords,
-                'restricted-public-info': 'public' not in self.keywords}
-
-    def start_webdriver_client(self):
-        capabilities = self.common_settings
-        capabilities.update({'platform': self.platform,
-                             'browserName': self.browser_name})
+        capabilities = {
+            'build': self.build or None,
+            'name': self.test_id,
+            'tags': tags,
+            'public': 'private' not in self.keywords,
+            'restricted-public-info': 'public' not in self.keywords,
+            'platform': self.platform,
+            'browserName': self.browser_name,
+        }
+        
         if self.browser_version:
             capabilities['version'] = self.browser_version
         if self.capabilities:
             capabilities.update(json.loads(self.capabilities))
+
+
+    def start_webdriver_client(self):
+        capabilities = self.get_cappabilities()
         executor = 'http://%s:%s@ondemand.saucelabs.com:80/wd/hub' % (
             self.credentials['username'],
             self.credentials['api-key'])
