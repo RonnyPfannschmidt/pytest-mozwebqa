@@ -58,30 +58,29 @@ def _verify_base_url(request):
                 '(URL: %s, Response: %s)' % (option.base_url, r.status_code))
 
 
-
-
 def pytest_runtest_setup(item):
+    option = item.config.option
     item.debug = {
         'urls': [],
         'screenshots': [],
         'html': [],
         'logs': [],
         'network_traffic': []}
-    TestSetup.base_url = item.config.option.base_url
+    TestSetup.base_url = option.base_url
 
     # configure test proxies
     if hasattr(item.config, 'browsermob_test_proxy'):
-        item.config.option.proxy_host = item.config.option.bmp_host
-        item.config.option.proxy_port = item.config.browsermob_test_proxy.port
+        option.proxy_host = item.config.option.bmp_host
+        option.proxy_port = item.config.browsermob_test_proxy.port
 
-    if item.config.option.sauce_labs_credentials_file:
-        item.sauce_labs_credentials = credentials.read(item.config.option.sauce_labs_credentials_file)
+    if option.sauce_labs_credentials_file:
+        item.sauce_labs_credentials = credentials.read(option.sauce_labs_credentials_file)
     else:
         item.sauce_labs_credentials = None
 
 
-    if item.config.option.credentials_file:
-        TestSetup.credentials = credentials.read(item.config.option.credentials_file)
+    if option.credentials_file:
+        TestSetup.credentials = credentials.read(option.credentials_file)
 
 
 #FIXME: needs autouse till test setup/teardown is cleaned up
