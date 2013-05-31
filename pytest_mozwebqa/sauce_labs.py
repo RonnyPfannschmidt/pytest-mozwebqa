@@ -29,8 +29,7 @@ class Client(selenium_client.Client):
         self.build = options.build
         self.credentials = credentials
 
-    def check_basic_usage(self):
-        super(Client, self).check_basic_usage()
+    def check_usage(self):
 
         if not self.credentials['username']:
             raise pytest.UsageError('username must be specified in the sauce labs credentials file.')
@@ -38,6 +37,7 @@ class Client(selenium_client.Client):
         if not self.credentials['api-key']:
             raise pytest.UsageError('api-key must be specified in the sauce labs credentials file.')
 
+        super(Client, self).check_usage()
 
     def get_cappabilities(self):
         config = ConfigParser.ConfigParser(defaults={'tags': ''})

@@ -36,11 +36,8 @@ class Client(object):
         self.default_implicit_wait = 10
         self.sauce_labs_credentials = options.sauce_labs_credentials_file
 
-    def check_basic_usage(self):
-        pass
 
     def check_usage(self):
-        self.check_basic_usage()
         self = self.options  # XXX: hack
         if self.driver.upper() == 'REMOTE':
             if not self.browser_name:
