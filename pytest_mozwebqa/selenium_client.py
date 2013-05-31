@@ -51,21 +51,20 @@ class Client(object):
 
         self.default_implicit_wait = 10
         self.sauce_labs_credentials = options.sauce_labs_credentials_file
-        self.assume_untrusted = options.assume_untrusted
 
     def check_basic_usage(self):
         pass
-
 
     def check_usage(self):
         self.check_basic_usage()
         if self.driver.upper() == 'REMOTE':
             if not self.browser_name:
-                raise pytest.UsageError("--browsername must be specified when using remote selenium.")
+                raise pytest.UsageError('--browsername must be specified'
+                                        ' when using remote selenium.')
 
             if not self.platform:
-                raise pytest.UsageError("--platform must be specified when using remote selenium.")
-
+                raise pytest.UsageError('--platform must be specified'
+                                        ' when using remote selenium.')
 
     def start(self):
         self.check_usage()
