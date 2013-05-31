@@ -88,29 +88,24 @@ def pytest_runtest_setup(item):
 def selenium_client(request, _sensitive_skiping):
     item = request.node
     test_id = '.'.join(split_class_and_test_names(item.nodeid))
-    if 'skip_selenium' not in item.keywords:
-        if item.sauce_labs_credentials is not None:
-            from sauce_labs import Client
-            TestSetup.selenium_client = Client(
-                test_id,
-                item.config.option,
-                item.keywords,
-                item.sauce_labs_credentials)
-        else:
-            from selenium_client import Client
-            TestSetup.selenium_client = Client(
-                test_id,
-                item.config.option)
-        TestSetup.selenium_client.start()
-        item.session_id = TestSetup.selenium_client.session_id
-        TestSetup.selenium = TestSetup.selenium_client.selenium
-        TestSetup.timeout = TestSetup.selenium_client.timeout
-        TestSetup.default_implicit_wait = TestSetup.selenium_client.default_implicit_wait
-        request.addfinalizer(TestSetup.selenium_client.stop)
+    if item.sauce_labs_credentials is not None:
+        from sauce_labs import Client
+        TestSetup.selenium_client = Client(
+            test_id,
+            item.config.option,
+            item.keywords,
+            item.sauce_labs_credentials)
     else:
-        TestSetup.timeout = item.config.option.webqatimeout
-        TestSetup.selenium = None
-
+        from selenium_client import Client
+        TestSetup.selenium_client = Client(
+            test_id,
+            item.config.option)
+    TestSetup.selenium_client.start()
+    item.session_id = TestSetup.selenium_client.session_id
+    TestSetup.selenium = TestSetup.selenium_client.selenium
+    TestSetup.timeout = TestSetup.selenium_client.timeout
+    TestSetup.default_implicit_wait = TestSetup.selenium_client.default_implicit_wait
+    request.addfinalizer(TestSetup.selenium_client.stop)
     #XXX: return value?
 
 
@@ -118,7 +113,7 @@ def pytest_runtest_makereport(__multicall__, item, call):
     report = __multicall__.execute()
     if report.when == 'call':
         report.session_id = getattr(item, 'session_id', None)
-        if hasattr(TestSetup, 'selenium') and TestSetup.selenium and not 'skip_selenium' in item.keywords:
+        if hasattr(TestSetup, 'selenium') and TestSetup.selenium:
             if report.skipped and 'xfail' in report.keywords or report.failed and 'xfail' not in report.keywords:
                 url = TestSetup.selenium_client.url
                 url and item.debug['urls'].append(url)
