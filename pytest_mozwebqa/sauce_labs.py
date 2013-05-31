@@ -30,12 +30,7 @@ class Client(selenium_client.Client):
         self.credentials = credentials
 
     def check_usage(self):
-
-        if not self.credentials['username']:
-            raise pytest.UsageError('username must be specified in the sauce labs credentials file.')
-
-        if not self.credentials['api-key']:
-            raise pytest.UsageError('api-key must be specified in the sauce labs credentials file.')
+        pass
 
         super(Client, self).check_usage()
 
@@ -64,10 +59,16 @@ class Client(selenium_client.Client):
 
 
     def start_webdriver_client(self):
-        capabilities = self.get_cappabilities()
+        if not self.credentials['username']:
+            raise pytest.UsageError('username must be specified in the sauce labs credentials file.')
+
+        if not self.credentials['api-key']:
+            raise pytest.UsageError('api-key must be specified in the sauce labs credentials file.')
+
         executor = 'http://%s:%s@ondemand.saucelabs.com:80/wd/hub' % (
             self.credentials['username'],
             self.credentials['api-key'])
+        capabilities = self.get_cappabilities()
         self.selenium = webdriver.Remote(command_executor=executor,
                                          desired_capabilities=capabilities)
 
