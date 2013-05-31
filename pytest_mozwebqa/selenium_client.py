@@ -40,11 +40,7 @@ class Client(object):
         self.driver = options.driver
         self.capabilities = options.capabilities
         self.chrome_path = options.chrome_path
-        self.chrome_options = options.chrome_options or '{}'
         self.firefox_path = options.firefox_path
-        self.firefox_preferences = options.firefox_preferences or '{}'
-        self.profile_path = options.profile_path
-        self.extension_paths = options.extension_paths or []
         self.opera_path = options.opera_path
         self.timeout = options.webqatimeout
 
@@ -52,7 +48,6 @@ class Client(object):
             self.browser_name = options.browser_name
             self.browser_version = options.browser_version
             self.platform = options.platform
-
 
         self.default_implicit_wait = 10
         self.sauce_labs_credentials = options.sauce_labs_credentials_file
@@ -90,13 +85,10 @@ class Client(object):
             capabilities.update(getattr(webdriver.DesiredCapabilities, self.browser_name.upper()))
             if json.loads(self.chrome_options) or self.extension_paths:
                 capabilities = create_chrome_options(
-                    self.chrome_options,
-                    self.extension_paths).to_capabilities()
+                    self.options
+                ).to_capabilities()
             if self.browser_name.upper() == 'FIREFOX':
-                profile = self.create_firefox_profile(
-                    self.firefox_preferences,
-                    self.profile_path,
-                    self.extension_paths)
+                profile = create_firefox_profile(self.options)
             if self.browser_version:
                 capabilities['version'] = self.browser_version
             capabilities['platform'] = self.platform.upper()
@@ -118,9 +110,7 @@ class Client(object):
         elif self.driver.upper() == 'CHROME':
             options = None
             if self.chrome_options or self.extension_paths:
-                options = self.create_chrome_options(
-                    self.chrome_options,
-                    self.extension_paths)
+                options = self.create_chrome_options(self.options)
             if self.chrome_path:
                 self.selenium = webdriver.Chrome(executable_path=self.chrome_path,
                                                  chrome_options=options,
@@ -131,10 +121,7 @@ class Client(object):
 
         elif self.driver.upper() == 'FIREFOX':
             binary = self.firefox_path and FirefoxBinary(self.firefox_path) or None
-            profile = self.create_firefox_profile(
-                self.firefox_preferences,
-                self.profile_path,
-                self.extension_paths)
+            profile = create_firefox_profile(self.options)
             self.selenium = webdriver.Firefox(
                 firefox_binary=binary,
                 firefox_profile=profile,
@@ -148,24 +135,24 @@ class Client(object):
         else:
             self.selenium = getattr(webdriver, self.driver)()
 
-
-    def create_firefox_profile(self, preferences, profile_path, extensions):
-        profile = webdriver.FirefoxProfile(profile_path)
-        for k, v in json.loads(preferences).items()
-            profile.set_preference(k, v)
-        profile.assume_untrusted_cert_issuer = self.assume_untrusted
-        profile.update_preferences()
-        for extension in extensions:
-            profile.add_extension(extension)
-        return profile
-
     def stop(self):
         self.selenium.quit()
 
 
-def create_chrome_options(preferences, extensions):
+def create_firefox_profile(options):
+    profile = webdriver.FirefoxProfile(options.profile_path)
+    for k, v in json.loads(options.firefox_preferences or '{}').items():
+        profile.set_preference(k, v)
+    profile.assume_untrusted_cert_issuer = options.assume_untrusted
+    profile.update_preferences()
+    for extension in options.extension_paths:
+        profile.add_extension(extension)
+    return profile
+
+
+def create_chrome_options(options):
     options = webdriver.ChromeOptions()
-    options_from_json = json.loads(preferences)
+    options_from_json = json.loads(options.chrome_options)
 
     if 'arguments' in options_from_json:
         for args_ in options_from_json['arguments']:
@@ -174,7 +161,7 @@ def create_chrome_options(preferences, extensions):
     if 'binary_location' in options_from_json:
         options.binary_location = options_from_json['binary_location']
 
-    for extension in extensions:
+    for extension in options.extension_paths:
         options.add_extension(extension)
 
     return options

@@ -191,6 +191,7 @@ def pytest_addoption(parser):
                      action='store',
                      dest='firefox_preferences',
                      metavar='str',
+                     default='{}',
                      help='json string of firefox preferences to set (webdriver).')
     group._addoption('--profilepath',
                      action='store',
@@ -201,11 +202,13 @@ def pytest_addoption(parser):
                      action='append',
                      dest='extension_paths',
                      metavar='str',
+                     default=[],
                      help='path to browser extension to install (webdriver).')
     group._addoption('--chromeopts',
                      action='store',
                      dest='chrome_options',
                      metavar='str',
+                     default='{}',
                      help='json string of google chrome options to set (webdriver).')
     group._addoption('--operapath',
                      action='store',
