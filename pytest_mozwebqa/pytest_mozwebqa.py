@@ -82,26 +82,24 @@ def pytest_runtest_setup(item):
 
 #FIXME: needs autouse till test setup/teardown is cleaned up
 @pytest.fixture
-def selenium_client(request, _sensitive_skiping):
+def webdriver(request, _sensitive_skiping):
     item = request.node
-    test_id = '.'.join(split_class_and_test_names(item.nodeid))
     if item.sauce_labs_credentials is not None:
-        from sauce_labs import Client
-        TestSetup.selenium_client = Client(
+        test_id = '.'.join(split_class_and_test_names(item.nodeid))
+        from sauce_labs import make_driver
+        webdriver = make_driver(
             test_id,
             item.config.option,
             item.keywords,
             item.sauce_labs_credentials)
     else:
-        from selenium_client import Client
-        TestSetup.selenium_client = Client(
-            test_id,
-            item.config.option)
-    item._webdriver = TestSetup.selenium_client.start()
-    TestSetup.selenium = TestSetup.selenium_client.selenium
+        from selenium_client import make_driver
+        webdriver = make_driver(item.config.option)
+    item._webdriver = webdriver
+    TestSetup.selenium = webdriver
     TestSetup.timeout = item.config.option.webqatimeout
-    TestSetup.default_implicit_wait = TestSetup.selenium_client.default_implicit_wait
-    request.addfinalizer(lambda: item._webdriver.quit())
+    request.addfinalizer(lambda: webdriver.quit())
+    return webdriver
     #XXX: return value?
 
 
@@ -132,8 +130,8 @@ def pytest_runtest_makereport(__multicall__, item, call):
 
 
 @pytest.fixture
-def mozwebqa(request, selenium_client):
-    return TestSetup(request)
+def mozwebqa(request, webdriver):
+    return TestSetup(request, webdriver)
 
 
 def pytest_addoption(parser):
@@ -289,5 +287,9 @@ class TestSetup:
     '''
         This class is just used for monkey patching
     '''
-    def __init__(self, request):
+    default_implicit_wait = 10
+
+    def __init__(self, request, webdriver):
         self.request = request
+        self.selenium = webdriver
+        self.selenium.implicitly_wait(self.default_implicit_wait)

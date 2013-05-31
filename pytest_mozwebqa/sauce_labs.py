@@ -15,6 +15,9 @@ from selenium import webdriver
 
 import selenium_client
 
+def make_driver(*k):
+    client = Client(*k)
+    return client.start()
 
 class Client(selenium_client.Client):
 
@@ -28,11 +31,6 @@ class Client(selenium_client.Client):
         self.keywords = keywords
         self.build = options.build
         self.credentials = credentials
-
-    def check_usage(self):
-        pass
-
-        super(Client, self).check_usage()
 
     def get_cappabilities(self):
         config = ConfigParser.ConfigParser(defaults={'tags': ''})
@@ -50,7 +48,7 @@ class Client(selenium_client.Client):
             'platform': self.platform,
             'browserName': self.browser_name,
         }
-        
+
         if self.browser_version:
             capabilities['version'] = self.browser_version
         if self.capabilities:
@@ -58,7 +56,7 @@ class Client(selenium_client.Client):
         return capabilities
 
 
-    def start_webdriver_client(self):
+    def start_webdriver_client(self, capabilities):
         if not self.credentials['username']:
             raise pytest.UsageError('username must be specified in the sauce labs credentials file.')
 

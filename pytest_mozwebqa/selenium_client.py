@@ -28,32 +28,28 @@ def proxy_from_options(options):
         return NoProxy()
 
 
+def make_driver(options):
+    client = Client(None, options)
+    return client.start()
+
 class Client(object):
 
     def __init__(self, test_id, options):
         self.test_id = test_id
         self.options = options
         self.default_implicit_wait = 10
-        self.sauce_labs_credentials = options.sauce_labs_credentials_file
-
-
-    def check_usage(self):
-        pass
 
     def start(self):
-        self.check_usage()
         capabilities = json.loads(self.options.capabilities)
         proxy = proxy_from_options(self.options)
         proxy.add_to_capabilities(capabilities)
         self.start_webdriver_client(capabilities)
-        self.selenium.implicitly_wait(self.default_implicit_wait)
         return self.selenium
 
     def start_webdriver_client(self, capabilities):
         specific_setup = '%s_driver' % self.options.driver.lower()
         make_webdriver = globals().get(specific_setup, generic_driver)
         self.selenium = make_webdriver(self.options, capabilities)
-
 
 
 def generic_driver(options, capabilities):
