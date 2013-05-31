@@ -33,19 +33,6 @@ class Client(object):
     def __init__(self, test_id, options):
         self.test_id = test_id
         self.options = options
-        self.host = options.host
-        self.port = options.port
-        self.base_url = options.base_url
-
-        self.driver = options.driver
-        self.capabilities = options.capabilities
-        self.timeout = options.webqatimeout
-
-        if self.driver.upper() == 'REMOTE':
-            self.browser_name = options.browser_name
-            self.browser_version = options.browser_version
-            self.platform = options.platform
-
         self.default_implicit_wait = 10
         self.sauce_labs_credentials = options.sauce_labs_credentials_file
 
@@ -54,6 +41,7 @@ class Client(object):
 
     def check_usage(self):
         self.check_basic_usage()
+        self = self.options  # XXX: hack
         if self.driver.upper() == 'REMOTE':
             if not self.browser_name:
                 raise pytest.UsageError('--browsername must be specified'
@@ -65,20 +53,16 @@ class Client(object):
 
     def start(self):
         self.check_usage()
+        capabilities = json.loads(self.options.capabilities)
         proxy = proxy_from_options(self.options)
-        self.start_webdriver_client(proxy)
+        proxy.add_to_capabilities(capabilities)
+        self.start_webdriver_client(capabilities)
         self.selenium.implicitly_wait(self.default_implicit_wait)
         return self.selenium
 
-    def start_webdriver_client(self, proxy):
-        capabilities = {}
-        if self.capabilities:
-            capabilities.update(json.loads(self.capabilities))
-        proxy.add_to_capabilities(capabilities)
-
-        specific_setup = '%s_driver' % self.driver.lower()
+    def start_webdriver_client(self, capabilities):
+        specific_setup = '%s_driver' % self.options.driver.lower()
         make_webdriver = globals().get(specific_setup, generic_driver)
-
         self.selenium = make_webdriver(self.options, capabilities)
 
     def stop(self):

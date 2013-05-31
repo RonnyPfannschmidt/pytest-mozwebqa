@@ -102,7 +102,7 @@ def selenium_client(request, _sensitive_skiping):
             item.config.option)
     item._webdriver = TestSetup.selenium_client.start()
     TestSetup.selenium = TestSetup.selenium_client.selenium
-    TestSetup.timeout = TestSetup.selenium_client.timeout
+    TestSetup.timeout = item.config.option.webqatimeout
     TestSetup.default_implicit_wait = TestSetup.selenium_client.default_implicit_wait
     request.addfinalizer(TestSetup.selenium_client.stop)
     #XXX: return value?
@@ -176,6 +176,7 @@ def pytest_addoption(parser):
                      action='store',
                      dest='capabilities',
                      metavar='str',
+                     default='{}',
                      help='json string of additional capabilties to set (webdriver).')
     group._addoption('--chromepath',
                      action='store',
