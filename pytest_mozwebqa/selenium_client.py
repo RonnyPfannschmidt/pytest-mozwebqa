@@ -38,15 +38,7 @@ class Client(object):
 
 
     def check_usage(self):
-        self = self.options  # XXX: hack
-        if self.driver.upper() == 'REMOTE':
-            if not self.browser_name:
-                raise pytest.UsageError('--browsername must be specified'
-                                        ' when using remote selenium.')
-
-            if not self.platform:
-                raise pytest.UsageError('--platform must be specified'
-                                        ' when using remote selenium.')
+        pass
 
     def start(self):
         self.check_usage()
@@ -76,6 +68,13 @@ def opera_driver(options, capabilities):
 
 
 def remote_driver(options, capabilities):
+    if not options.browser_name:
+        raise pytest.UsageError('--browsername must be specified'
+                                ' when using remote selenium.')
+
+    if not options.platform:
+        raise pytest.UsageError('--platform must be specified'
+                                ' when using remote selenium.')
 
     capabilities.update(getattr(webdriver.DesiredCapabilities,
                                 options.browser_name.upper()))
