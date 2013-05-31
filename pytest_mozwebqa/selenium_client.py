@@ -13,10 +13,26 @@ from selenium import selenium
 from selenium import webdriver
 
 
+class NoProxy(object):
+    def add_to_capabilities(self, caps):
+        pass
+
+
+def proxy_from_options(options):
+    if options.proxy_host and options.proxy_port:
+        proxy_str = '%(proxy_host)s:%(proxy_port)s' % vars(options)
+        proxy = Proxy()
+        proxy.ssl_proxy = proxy.http_proxy = proxy_str
+        return proxy
+    else:
+        return NoProxy()
+
+
 class Client(object):
 
     def __init__(self, test_id, options):
         self.test_id = test_id
+        self.options = options
         self.host = options.host
         self.port = options.port
         self.base_url = options.base_url
@@ -41,8 +57,6 @@ class Client(object):
         self.default_implicit_wait = 10
         self.sauce_labs_credentials = options.sauce_labs_credentials_file
         self.assume_untrusted = options.assume_untrusted
-        self.proxy_host = options.proxy_host
-        self.proxy_port = options.proxy_port
 
     def check_basic_usage(self):
         pass
@@ -60,19 +74,16 @@ class Client(object):
 
     def start(self):
         self.check_usage()
-        self.start_webdriver_client()
+        proxy = proxy_from_options(self.options)
+        self.start_webdriver_client(proxy)
         self.selenium.implicitly_wait(self.default_implicit_wait)
         return self.selenium
 
-    def start_webdriver_client(self):
+    def start_webdriver_client(self, proxy):
         capabilities = {}
         if self.capabilities:
             capabilities.update(json.loads(self.capabilities))
-        if self.proxy_host and self.proxy_port:
-            proxy = Proxy()
-            proxy.http_proxy = '%s:%s' % (self.proxy_host, self.proxy_port)
-            proxy.ssl_proxy = proxy.http_proxy
-            proxy.add_to_capabilities(capabilities)
+        proxy.add_to_capabilities(capabilities)
         profile = None
 
         if self.driver.upper() == 'REMOTE':
