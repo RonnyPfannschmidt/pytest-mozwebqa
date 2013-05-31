@@ -107,24 +107,9 @@ class Client(object):
                     (self.browser_name, ', '.join(valid_browsers)))
 
         elif self.driver.upper() == 'CHROME':
-            options = None
-            if self.chrome_options or self.extension_paths:
-                options = self.create_chrome_options(self.options)
-            if self.chrome_path:
-                self.selenium = webdriver.Chrome(executable_path=self.chrome_path,
-                                                 chrome_options=options,
-                                                 desired_capabilities=capabilities or None)
-            else:
-                self.selenium = webdriver.Chrome(chrome_options=options,
-                                                 desired_capabilities=capabilities or None)
-
+            self.selenium = chrome_driver(self.options, capabilities)
         elif self.driver.upper() == 'FIREFOX':
-            binary = self.firefox_path and FirefoxBinary(self.firefox_path) or None
-            profile = create_firefox_profile(self.options)
-            self.selenium = webdriver.Firefox(
-                firefox_binary=binary,
-                firefox_profile=profile,
-                capabilities=capabilities or None)
+            self.selenium = firefox_driver(self.options, capabilities)
         elif self.driver.upper() == 'OPERA':
             capabilities.update(webdriver.DesiredCapabilities.OPERA)
             self.selenium = webdriver.Opera(executable_path=self.opera_path,
@@ -134,6 +119,31 @@ class Client(object):
 
     def stop(self):
         self.selenium.quit()
+
+
+def chrome_driver(options, capabilities):
+    chrome_options = create_chrome_options(options)
+    if options.chrome_path:
+        return webdriver.Chrome(
+            executable_path=options.chrome_path,
+            chrome_options=options,
+            desired_capabilities=capabilities or None)
+    else:
+        return webdriver.Chrome(
+            chrome_options=options,
+            desired_capabilities=capabilities or None)
+
+
+def firefox_driver(options, capabilities):
+    if options.firefox_path:
+        binary = FirefoxBinary(options.firefox_path)
+    else:
+        binary = None
+    profile = create_firefox_profile(options)
+    return webdriver.Firefox(
+        firefox_binary=binary,
+        firefox_profile=profile,
+        capabilities=capabilities or None)
 
 
 def create_firefox_profile(options):
