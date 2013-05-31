@@ -13,8 +13,6 @@ from py.xml import html
 from selenium import selenium
 from selenium import webdriver
 
-import selenium_client
-
 
 def split_class_and_test_names(nodeid):
     names = nodeid.split("::")
@@ -28,63 +26,52 @@ def split_class_and_test_names(nodeid):
 
 def make_driver(item):
     test_id = '.'.join(split_class_and_test_names(item.nodeid))
-    client = Client(
-        test_id,
-        item.config.option,
-        item.keywords,
-        item.sauce_labs_credentials)
-    return client.start()
+    options = item.config.option
+    keywords = item.keywords
+    credentials = item.sauce_labs_credentials
 
-class Client(selenium_client.Client):
-
-    def __init__(self, test_id, options, keywords, credentials):
-        super(Client, self).__init__(test_id, options)
-
-        self.browser_name = options.browser_name
-        self.browser_version = options.browser_version
-        self.platform = options.platform
-
-        self.keywords = keywords
-        self.build = options.build
-        self.credentials = credentials
-
-    def get_cappabilities(self):
-        config = ConfigParser.ConfigParser(defaults={'tags': ''})
-        config.read('mozwebqa.cfg')
-        tags = config.get('DEFAULT', 'tags').split(',')
-        from _pytest.mark import MarkInfo
-        tags.extend(mark.name for mark in self.keywords.values()
-                    if isinstance(mark, MarkInfo))
-        capabilities = {
-            'build': self.build or None,
-            'name': self.test_id,
-            'tags': tags,
-            'public': 'private' not in self.keywords,
-            'restricted-public-info': 'public' not in self.keywords,
-            'platform': self.platform,
-            'browserName': self.browser_name,
-        }
-
-        if self.browser_version:
-            capabilities['version'] = self.browser_version
-        if self.capabilities:
-            capabilities.update(json.loads(self.capabilities))
-        return capabilities
+    browser_name = options.browser_name
+    browser_version = options.browser_version
+    platform = options.platform
+    build = options.build
 
 
-    def start_webdriver_client(self, capabilities):
-        if not self.credentials['username']:
+    config = ConfigParser.ConfigParser(defaults={'tags': ''})
+    config.read('mozwebqa.cfg')
+    tags = config.get('DEFAULT', 'tags').split(',')
+    from _pytest.mark import MarkInfo
+    tags.extend(mark.name for mark in keywords.values()
+                if isinstance(mark, MarkInfo))
+    capabilities = {
+        'build': build or None,
+        'name': test_id,
+        'tags': tags,
+        'public': 'private' not in keywords,
+        'restricted-public-info': 'public' not in keywords,
+        'platform': platform,
+        'browserName': browser_name,
+    }
+
+    if browser_version:
+        capabilities['version'] = browser_version
+    if options.capabilities:
+        capabilities.update(json.loads(options.capabilities))
+    return start_webdriver_client(credentials, capabilities)
+
+
+def start_webdriver_client(credentials, capabilities):
+        if not credentials['username']:
             raise pytest.UsageError('username must be specified in the sauce labs credentials file.')
 
-        if not self.credentials['api-key']:
+        if not credentials['api-key']:
             raise pytest.UsageError('api-key must be specified in the sauce labs credentials file.')
 
         executor = 'http://%s:%s@ondemand.saucelabs.com:80/wd/hub' % (
-            self.credentials['username'],
-            self.credentials['api-key'])
-        capabilities = self.get_cappabilities()
-        self.selenium = webdriver.Remote(command_executor=executor,
-                                         desired_capabilities=capabilities)
+            credentials['username'],
+            credentials['api-key'])
+        return webdriver.Remote(
+            command_executor=executor,
+            desired_capabilities=capabilities)
 
 
 class Job(object):

@@ -29,27 +29,17 @@ def proxy_from_options(options):
 
 
 def make_driver(item):
-    client = Client(None, item.config.option)
-    return client.start()
+    options = item.config.option
+    capabilities = json.loads(options.capabilities)
+    proxy = proxy_from_options(options)
+    proxy.add_to_capabilities(capabilities)
+    return start_webdriver_client(options, capabilities)
 
-class Client(object):
 
-    def __init__(self, test_id, options):
-        self.test_id = test_id
-        self.options = options
-        self.default_implicit_wait = 10
-
-    def start(self):
-        capabilities = json.loads(self.options.capabilities)
-        proxy = proxy_from_options(self.options)
-        proxy.add_to_capabilities(capabilities)
-        self.start_webdriver_client(capabilities)
-        return self.selenium
-
-    def start_webdriver_client(self, capabilities):
-        specific_setup = '%s_driver' % self.options.driver.lower()
-        make_webdriver = globals().get(specific_setup, generic_driver)
-        self.selenium = make_webdriver(self.options, capabilities)
+def start_webdriver_client(options, capabilities):
+    specific_setup = '%s_driver' % options.driver.lower()
+    make_webdriver = globals().get(specific_setup, generic_driver)
+    return make_webdriver(options, capabilities)
 
 
 def generic_driver(options, capabilities):
