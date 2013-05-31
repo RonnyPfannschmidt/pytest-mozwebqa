@@ -39,9 +39,6 @@ class Client(object):
 
         self.driver = options.driver
         self.capabilities = options.capabilities
-        self.chrome_path = options.chrome_path
-        self.firefox_path = options.firefox_path
-        self.opera_path = options.opera_path
         self.timeout = options.webqatimeout
 
         if self.driver.upper() == 'REMOTE':
@@ -78,47 +75,52 @@ class Client(object):
         if self.capabilities:
             capabilities.update(json.loads(self.capabilities))
         proxy.add_to_capabilities(capabilities)
-        profile = None
 
-        if self.driver.upper() == 'REMOTE':
-            capabilities.update(getattr(webdriver.DesiredCapabilities, self.browser_name.upper()))
-            if json.loads(self.chrome_options) or self.extension_paths:
-                capabilities = create_chrome_options(
-                    self.options
-                ).to_capabilities()
-            if self.browser_name.upper() == 'FIREFOX':
-                profile = create_firefox_profile(self.options)
-            if self.browser_version:
-                capabilities['version'] = self.browser_version
-            capabilities['platform'] = self.platform.upper()
-            executor = 'http://%s:%s/wd/hub' % (self.host, self.port)
-            try:
-                self.selenium = webdriver.Remote(
-                    command_executor=executor,
-                    desired_capabilities=capabilities or None,
-                    browser_profile=profile)
-            except AttributeError:
-                valid_browsers = [
-                    attr for attr in dir(webdriver.DesiredCapabilities)
-                    if not attr.startswith('__')
-                ]
-                raise AttributeError(
-                    "Invalid browser name: '%s'. Valid options are: %s" %
-                    (self.browser_name, ', '.join(valid_browsers)))
+        specific_setup = '%s_driver' % self.driver.lower()
+        make_webdriver = globals().get(specific_setup, generic_driver)
 
-        elif self.driver.upper() == 'CHROME':
-            self.selenium = chrome_driver(self.options, capabilities)
-        elif self.driver.upper() == 'FIREFOX':
-            self.selenium = firefox_driver(self.options, capabilities)
-        elif self.driver.upper() == 'OPERA':
-            capabilities.update(webdriver.DesiredCapabilities.OPERA)
-            self.selenium = webdriver.Opera(executable_path=self.opera_path,
-                                            desired_capabilities=capabilities)
-        else:
-            self.selenium = getattr(webdriver, self.driver)()
+        self.selenium = make_webdriver(self.options, capabilities)
 
     def stop(self):
         self.selenium.quit()
+
+
+def generic_driver(options, capabilities):
+    return getattr(webdriver, options.driver)()
+
+
+def opera_driver(options, capabilities):
+    capabilities.update(webdriver.DesiredCapabilities.OPERA)
+    return webdriver.Opera(
+        executable_path=options.opera_path,
+        desired_capabilities=capabilities)
+
+
+def remote_driver(options, capabilities):
+
+    capabilities.update(getattr(webdriver.DesiredCapabilities,
+                                options.browser_name.upper()))
+    if json.loads(options.chrome_options) or options.extension_paths:
+        capabilities = create_chrome_options(options).to_capabilities()
+    if options.browser_name.upper() == 'FIREFOX':
+        profile = create_firefox_profile(options)
+    if options.browser_version:
+        capabilities['version'] = options.browser_version
+    capabilities['platform'] = options.platform.upper()
+    executor = 'http://%s:%s/wd/hub' % (options.host, options.port)
+    try:
+        return webdriver.Remote(
+            command_executor=executor,
+            desired_capabilities=capabilities or None,
+            browser_profile=profile)
+    except AttributeError:
+        valid_browsers = [
+            attr for attr in dir(webdriver.DesiredCapabilities)
+            if not attr.startswith('__')
+        ]
+        raise AttributeError(
+            "Invalid browser name: '%s'. Valid options are: %s" %
+            (self.browser_name, ', '.join(valid_browsers)))
 
 
 def chrome_driver(options, capabilities):
@@ -126,7 +128,7 @@ def chrome_driver(options, capabilities):
     if options.chrome_path:
         return webdriver.Chrome(
             executable_path=options.chrome_path,
-            chrome_options=options,
+            chrome_options=chrome_options,
             desired_capabilities=capabilities or None)
     else:
         return webdriver.Chrome(
