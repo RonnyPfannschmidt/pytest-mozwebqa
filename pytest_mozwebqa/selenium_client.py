@@ -42,7 +42,7 @@ class Client(object):
         self.chrome_path = options.chrome_path
         self.chrome_options = options.chrome_options or '{}'
         self.firefox_path = options.firefox_path
-        self.firefox_preferences = options.firefox_preferences
+        self.firefox_preferences = options.firefox_preferences or '{}'
         self.profile_path = options.profile_path
         self.extension_paths = options.extension_paths or []
         self.opera_path = options.opera_path
@@ -151,17 +151,17 @@ class Client(object):
 
     def create_firefox_profile(self, preferences, profile_path, extensions):
         profile = webdriver.FirefoxProfile(profile_path)
-        if preferences:
-            [profile.set_preference(k, v) for k, v in json.loads(preferences).items()]
+        for k, v in json.loads(preferences).items()
+            profile.set_preference(k, v)
         profile.assume_untrusted_cert_issuer = self.assume_untrusted
         profile.update_preferences()
         for extension in extensions:
             profile.add_extension(extension)
         return profile
 
-
     def stop(self):
         self.selenium.quit()
+
 
 def create_chrome_options(preferences, extensions):
     options = webdriver.ChromeOptions()
