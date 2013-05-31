@@ -62,6 +62,7 @@ class Client(object):
         self.check_usage()
         self.start_webdriver_client()
         self.selenium.implicitly_wait(self.default_implicit_wait)
+        return self.selenium
 
     def start_webdriver_client(self):
         capabilities = {}
@@ -137,10 +138,6 @@ class Client(object):
             self.selenium = getattr(webdriver, self.driver)()
 
 
-    @property
-    def session_id(self):
-        return self.selenium.session_id
-
     def create_firefox_profile(self, preferences, profile_path, extensions):
         profile = webdriver.FirefoxProfile(profile_path)
         if preferences:
@@ -166,20 +163,6 @@ class Client(object):
             options.add_extension(extension)
 
         return options
-
-    @property
-    def screenshot(self):
-        return self.selenium.get_screenshot_as_base64()
-
-    @property
-    def html(self):
-        return self.selenium.page_source
-
-
-
-    @property
-    def url(self):
-        return self.selenium.current_url
 
     def stop(self):
         self.selenium.quit()

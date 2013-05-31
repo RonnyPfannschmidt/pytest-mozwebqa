@@ -100,8 +100,7 @@ def selenium_client(request, _sensitive_skiping):
         TestSetup.selenium_client = Client(
             test_id,
             item.config.option)
-    TestSetup.selenium_client.start()
-    item.session_id = TestSetup.selenium_client.session_id
+    item._webdriver = TestSetup.selenium_client.start()
     TestSetup.selenium = TestSetup.selenium_client.selenium
     TestSetup.timeout = TestSetup.selenium_client.timeout
     TestSetup.default_implicit_wait = TestSetup.selenium_client.default_implicit_wait
@@ -112,15 +111,18 @@ def selenium_client(request, _sensitive_skiping):
 def pytest_runtest_makereport(__multicall__, item, call):
     report = __multicall__.execute()
     if report.when == 'call':
-        report.session_id = getattr(item, 'session_id', None)
-        if hasattr(TestSetup, 'selenium') and TestSetup.selenium:
-            if report.skipped and 'xfail' in report.keywords or report.failed and 'xfail' not in report.keywords:
-                url = TestSetup.selenium_client.url
-                url and item.debug['urls'].append(url)
-                screenshot = TestSetup.selenium_client.screenshot
-                screenshot and item.debug['screenshots'].append(screenshot)
-                html = TestSetup.selenium_client.html
-                html and item.debug['html'].append(html)
+        webdriver = getattr(item, '_webdriver', None)
+        if webdriver is not None:
+            report.session_id = webdriver.session_id
+            if (
+                    report.skipped and 'xfail' in report.keywords or
+                    report.failed and 'xfail' not in report.keywords):
+                url = webdriver.current_url
+                item.debug['urls'].append(url)
+                screenshot = webdriver.get_screenshot_as_base64()
+                item.debug['screenshots'].append(screenshot)
+                html = webdriver.page_source
+                item.debug['html'].append(html)
                 report.sections.append(('pytest-mozwebqa', _debug_summary(item.debug)))
             report.debug = item.debug
             if hasattr(item, 'sauce_labs_credentials') and report.session_id:
