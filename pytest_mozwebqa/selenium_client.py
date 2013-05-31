@@ -89,7 +89,7 @@ class Client(object):
         if self.driver.upper() == 'REMOTE':
             capabilities.update(getattr(webdriver.DesiredCapabilities, self.browser_name.upper()))
             if json.loads(self.chrome_options) or self.extension_paths:
-                capabilities = self.create_chrome_options(
+                capabilities = create_chrome_options(
                     self.chrome_options,
                     self.extension_paths).to_capabilities()
             if self.browser_name.upper() == 'FIREFOX':
@@ -159,21 +159,22 @@ class Client(object):
             profile.add_extension(extension)
         return profile
 
-    def create_chrome_options(self, preferences, extensions):
-        options = webdriver.ChromeOptions()
-        options_from_json = json.loads(preferences)
-
-        if 'arguments' in options_from_json:
-            for args_ in options_from_json['arguments']:
-                options.add_argument(args_)
-
-        if 'binary_location' in options_from_json:
-            options.binary_location = options_from_json['binary_location']
-
-        for extension in extensions:
-            options.add_extension(extension)
-
-        return options
 
     def stop(self):
         self.selenium.quit()
+
+def create_chrome_options(preferences, extensions):
+    options = webdriver.ChromeOptions()
+    options_from_json = json.loads(preferences)
+
+    if 'arguments' in options_from_json:
+        for args_ in options_from_json['arguments']:
+            options.add_argument(args_)
+
+    if 'binary_location' in options_from_json:
+        options.binary_location = options_from_json['binary_location']
+
+    for extension in extensions:
+        options.add_extension(extension)
+
+    return options
