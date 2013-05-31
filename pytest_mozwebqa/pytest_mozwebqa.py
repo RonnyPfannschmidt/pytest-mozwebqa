@@ -22,22 +22,26 @@ __version__ = '1.1'
 
 
 def pytest_sessionstart(session):
+    option = session.config.option
+
     # configure session proxies
     if hasattr(session.config, 'browsermob_session_proxy'):
-        session.config.option.proxy_host = session.config.option.bmp_host
-        session.config.option.proxy_port = session.config.browsermob_session_proxy.port
+        option.proxy_host = option.bmp_host
+        option.proxy_port = session.config.browsermob_session_proxy.port
 
-    if hasattr(session.config, 'zap'):
-        if all([session.config.option.proxy_host, session.config.option.proxy_port]):
-            session.config.zap.core.set_option_proxy_chain_name(session.config.option.proxy_host)
-            session.config.zap.core.set_option_proxy_chain_port(session.config.option.proxy_port)
-        session.config.option.proxy_host = session.config.option.zap_host
-        session.config.option.proxy_port = session.config.option.zap_port
+    zap = getattr(session.config, 'zap', None)
+    if zap is not None:
+        if option.proxy_host and option.proxy_port:
+            zap.core.set_option_proxy_chain_name(option.proxy_host)
+            zap.core.set_option_proxy_chain_port(option.proxy_port)
+        option.proxy_host = option.zap_host
+        option.proxy_port = option.zap_port
 
 
 @pytest.fixture(scope='session')
 def selenium_base_url(request):
-    url = request.config.option.base_url or request.config.getini('selenium_base_url')
+    url = (request.config.option.base_url or
+           request.config.getini('selenium_base_url'))
     if not url:
         raise pytest.UsageError('--baseurl must be specified.')
     return url
