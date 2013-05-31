@@ -44,7 +44,8 @@ class Client(selenium_client.Client):
         config.read('mozwebqa.cfg')
         tags = config.get('DEFAULT', 'tags').split(',')
         from _pytest.mark import MarkInfo
-        tags.extend([mark for mark in self.keywords.keys() if isinstance(self.keywords[mark], MarkInfo)])
+        tags.extend(mark.name for mark in self.keywords.values()
+                    if isinstance(mark, MarkInfo))
         capabilities = {
             'build': self.build or None,
             'name': self.test_id,
