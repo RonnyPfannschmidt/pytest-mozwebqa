@@ -18,9 +18,6 @@ from . import plugin_safety
 __version__ = '1.1'
 
 
-
-
-
 def pytest_sessionstart(session):
     option = session.config.option
 
@@ -104,7 +101,7 @@ def selenium_client(request, _sensitive_skiping):
     TestSetup.selenium = TestSetup.selenium_client.selenium
     TestSetup.timeout = item.config.option.webqatimeout
     TestSetup.default_implicit_wait = TestSetup.selenium_client.default_implicit_wait
-    request.addfinalizer(TestSetup.selenium_client.stop)
+    request.addfinalizer(lambda: item._webdriver.quit())
     #XXX: return value?
 
 

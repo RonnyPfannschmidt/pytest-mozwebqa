@@ -65,8 +65,6 @@ class Client(object):
         make_webdriver = globals().get(specific_setup, generic_driver)
         self.selenium = make_webdriver(self.options, capabilities)
 
-    def stop(self):
-        self.selenium.quit()
 
 
 def generic_driver(options, capabilities):
