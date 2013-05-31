@@ -125,8 +125,6 @@ class Client(object):
                 firefox_binary=binary,
                 firefox_profile=profile,
                 capabilities=capabilities or None)
-        elif self.driver.upper() == 'IE':
-            self.selenium = webdriver.Ie()
         elif self.driver.upper() == 'OPERA':
             capabilities.update(webdriver.DesiredCapabilities.OPERA)
             self.selenium = webdriver.Opera(executable_path=self.opera_path,
