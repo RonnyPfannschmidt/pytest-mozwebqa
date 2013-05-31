@@ -85,16 +85,10 @@ def pytest_runtest_setup(item):
 def webdriver(request, _sensitive_skiping):
     item = request.node
     if item.sauce_labs_credentials is not None:
-        test_id = '.'.join(split_class_and_test_names(item.nodeid))
         from sauce_labs import make_driver
-        webdriver = make_driver(
-            test_id,
-            item.config.option,
-            item.keywords,
-            item.sauce_labs_credentials)
     else:
         from selenium_client import make_driver
-        webdriver = make_driver(item.config.option)
+    webdriver = make_driver(item)
     item._webdriver = webdriver
     TestSetup.selenium = webdriver
     TestSetup.timeout = item.config.option.webqatimeout
@@ -266,14 +260,6 @@ def pytest_addoption(parser):
 
 
 
-def split_class_and_test_names(nodeid):
-    names = nodeid.split("::")
-    names[0] = names[0].replace("/", '.')
-    names = [x.replace(".py", "") for x in names if x != "()"]
-    classnames = names[:-1]
-    classname = ".".join(classnames)
-    name = names[-1]
-    return (classname, name)
 
 
 def _debug_summary(debug):

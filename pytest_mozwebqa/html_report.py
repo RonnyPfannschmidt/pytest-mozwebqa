@@ -45,7 +45,7 @@ class HTMLReport(object):
 
     def _appendrow(self, result, report):
         import pytest_mozwebqa
-        (testclass, testmethod) = pytest_mozwebqa.split_class_and_test_names(report.nodeid)
+        (testclass, testmethod) = sauce_labs.split_class_and_test_names(report.nodeid)
         time = getattr(report, 'duration', 0.0)
 
         links = {}

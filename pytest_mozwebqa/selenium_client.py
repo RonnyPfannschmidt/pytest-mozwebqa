@@ -28,8 +28,8 @@ def proxy_from_options(options):
         return NoProxy()
 
 
-def make_driver(options):
-    client = Client(None, options)
+def make_driver(item):
+    client = Client(None, item.config.option)
     return client.start()
 
 class Client(object):

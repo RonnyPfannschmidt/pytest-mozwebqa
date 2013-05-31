@@ -15,8 +15,24 @@ from selenium import webdriver
 
 import selenium_client
 
-def make_driver(*k):
-    client = Client(*k)
+
+def split_class_and_test_names(nodeid):
+    names = nodeid.split("::")
+    names[0] = names[0].replace("/", '.')
+    names = [x.replace(".py", "") for x in names if x != "()"]
+    classnames = names[:-1]
+    classname = ".".join(classnames)
+    name = names[-1]
+    return (classname, name)
+
+
+def make_driver(item):
+    test_id = '.'.join(split_class_and_test_names(item.nodeid))
+    client = Client(
+        test_id,
+        item.config.option,
+        item.keywords,
+        item.sauce_labs_credentials)
     return client.start()
 
 class Client(selenium_client.Client):
