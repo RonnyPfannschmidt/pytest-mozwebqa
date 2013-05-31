@@ -60,6 +60,7 @@ class Client(selenium_client.Client):
             capabilities['version'] = self.browser_version
         if self.capabilities:
             capabilities.update(json.loads(self.capabilities))
+        return capabilities
 
 
     def start_webdriver_client(self):
