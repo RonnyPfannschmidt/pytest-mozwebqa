@@ -50,8 +50,9 @@ def _sensitive_skiping(request, selenium_base_url):
     destructive = 'nondestructive' not in item.keywords
     if sensitive and destructive:
         first_match = next(x for x in matches if x)
-        pytest.skip('This test is destructive and the target URL is ' \
-                     'considered a sensitive environment. If this test is ' \
-                     'not destructive, add the \'nondestructive\' marker to ' \
-                     'it. Sensitive URL: %s' % first_match.string)
+        pytest.skip(
+            'This test is destructive and the target URL is '
+             'considered a sensitive environment. If this test is '
+             'not destructive, add the \'nondestructive\' marker to '
+             'it. Sensitive URL: %s' % first_match.string)
 
