@@ -245,7 +245,7 @@ def _debug_summary(debug):
 
 class TestSetup:
     '''
-        This class is just used for monkey patching
+        This class is just used for stuff
     '''
     default_implicit_wait = 10
 
