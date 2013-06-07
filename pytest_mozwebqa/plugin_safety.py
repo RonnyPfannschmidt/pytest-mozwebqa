@@ -1,7 +1,7 @@
 import pytest
 import requests
 import re
-
+from functools import partial
 
 def pytest_addoption(parser):
     group = parser.getgroup('safety', 'safety')
@@ -41,8 +41,7 @@ def _sensitive_skiping(request, selenium_base_url):
     item = request.node
     r = requests.get(selenium_base_url, verify=False)
     urls = [h.url for h in r.history] + [r.url]
-    def search(url):
-        return re.search(request.config.option.sensitive_url, url)
+    search = partial(re.search, request.config.option.sensitive_url)
     matches = map(search, urls)
     sensitive = any(matches)
 
