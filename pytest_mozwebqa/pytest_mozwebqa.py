@@ -4,16 +4,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import py
-import re
 import pytest
-import ConfigParser
-
 import requests
-
-import credentials
-from . import plugin_safety
-
 
 __version__ = '1.1'
 
@@ -90,7 +82,10 @@ def pytest_runtest_makereport(__multicall__, item, call):
     report = __multicall__.execute()
     if report.when == 'call':
         webdriver = getattr(item, '_webdriver', None)
+        import selenium.webdriver
+        assert isinstance(webdriver, selenium.webdriver.Remote)
         if webdriver is not None:
+            selenium.webdriver.PhantomJS
             report.session_id = webdriver.session_id
             if (
                         report.skipped and 'xfail' in report.keywords or
