@@ -21,25 +21,21 @@ def file_test(testdir):
     """)
 
 
-@pytest.fixture
-def simple_failtest(testdir, file_test):
-
-    def failtest(*k, **kw):
-        reprec = testdir.inline_run('--tb=short', file_test, *k, **kw)
-        passed, skipped, failed = reprec.listoutcomes()
-        assert len(failed) == 1
-        out = failed[0].longrepr.reprcrash.message
-        return out
-    return failtest
+def runtest_one_failure_with_output(testdir, *k, **kw):
+    reprec = testdir.inline_run('--tb=short', *k, **kw)
+    passed, skipped, failed = reprec.listoutcomes()
+    assert len(failed) == 1
+    out = failed[0].longrepr.reprcrash.message
+    return out
 
 
 @pytest.fixture
-def url_failtest(simple_failtest, webserver_baseurl):
-    return partial(simple_failtest, webserver_baseurl)
+def url_failtest(testdir, file_test, webserver_baseurl):
+    return partial(runtest_one_failure_with_output, testdir, file_test, webserver_baseurl)
 
 
-def testShouldFailWithoutBaseURL(simple_failtest):
-    out = simple_failtest()
+def testShouldFailWithoutBaseURL(testdir, file_test):
+    out = runtest_one_failure_with_output(testdir, file_test)
     assert out == 'UsageError: --baseurl must be specified.'
 
 

@@ -24,11 +24,10 @@ def split_class_and_test_names(nodeid):
     return (classname, name)
 
 
-def make_driver(item):
+def make_driver(item, credentials):
     test_id = '.'.join(split_class_and_test_names(item.nodeid))
     options = item.config.option
     keywords = item.keywords
-    credentials = item.sauce_labs_credentials
 
     browser_name = options.browser_name
     browser_version = options.browser_version

@@ -19,6 +19,7 @@ def pytest_configure(config):
     except:
         raise pytest.UsageError('need a running selenium-standalone')
 
+
 @pytest.fixture
 def webserver_baseurl(webserver):
     return '--baseurl=http://localhost:%s' % webserver.port
@@ -32,7 +33,6 @@ def _testdir(request, webserver_baseurl, monkeypatch):
 
     testdir = request.getfuncargvalue('testdir')
 
-    
     testdir.makepyfile(conftest="""
         import pytest
         @pytest.fixture
@@ -48,7 +48,9 @@ def _testdir(request, webserver_baseurl, monkeypatch):
             '--driver=firefox',
             '--webqareport=result.html',
             *k, **kw)
+
     testdir.inline_runqa = inline_runqa
+
     def quick_qa(*k, **kw):
         reprec = inline_runqa(*k)
         outcomes = reprec.listoutcomes()
@@ -60,6 +62,7 @@ def _testdir(request, webserver_baseurl, monkeypatch):
 
     testdir.quick_qa = quick_qa
     return testdir
+
 
 @pytest.fixture(scope='session', autouse=True)
 def webserver(request):

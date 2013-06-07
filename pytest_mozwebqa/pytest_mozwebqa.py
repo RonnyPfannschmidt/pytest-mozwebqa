@@ -63,35 +63,24 @@ def pytest_runtest_setup(item):
         'html': [],
         'logs': [],
         'network_traffic': []}
-    TestSetup.base_url = option.base_url
 
     # configure test proxies
     if hasattr(item.config, 'browsermob_test_proxy'):
         option.proxy_host = item.config.option.bmp_host
         option.proxy_port = item.config.browsermob_test_proxy.port
 
-    if option.sauce_labs_credentials_file:
-        item.sauce_labs_credentials = credentials.read(option.sauce_labs_credentials_file)
-    else:
-        item.sauce_labs_credentials = None
-
-
-    if option.credentials_file:
-        TestSetup.credentials = credentials.read(option.credentials_file)
-
 
 #FIXME: needs autouse till test setup/teardown is cleaned up
 @pytest.fixture
-def webdriver(request, _sensitive_skiping):
-    item = request.node
-    if item.sauce_labs_credentials is not None:
+def webdriver(request, mozwebqa_saucelab_credentials):
+    if mozwebqa_saucelab_credentials is not None:
         from sauce_labs import make_driver
     else:
         from selenium_client import make_driver
-    webdriver = make_driver(item)
+
+    item = request.node
+    webdriver = make_driver(item, mozwebqa_saucelab_credentials)
     item._webdriver = webdriver
-    TestSetup.selenium = webdriver
-    TestSetup.timeout = item.config.option.webqatimeout
     request.addfinalizer(lambda: webdriver.quit())
     return webdriver
     #XXX: return value?
@@ -104,8 +93,8 @@ def pytest_runtest_makereport(__multicall__, item, call):
         if webdriver is not None:
             report.session_id = webdriver.session_id
             if (
-                    report.skipped and 'xfail' in report.keywords or
-                    report.failed and 'xfail' not in report.keywords):
+                        report.skipped and 'xfail' in report.keywords or
+                        report.failed and 'xfail' not in report.keywords):
                 url = webdriver.current_url
                 item.debug['urls'].append(url)
                 screenshot = webdriver.get_screenshot_as_base64()
@@ -117,6 +106,7 @@ def pytest_runtest_makereport(__multicall__, item, call):
             if hasattr(item, 'sauce_labs_credentials') and report.session_id:
                 result = {'passed': report.passed or (report.failed and 'xfail' in report.keywords)}
                 import sauce_labs
+
                 sauce_labs.Job(report.session_id).send_result(
                     result,
                     item.sauce_labs_credentials)
@@ -124,12 +114,11 @@ def pytest_runtest_makereport(__multicall__, item, call):
 
 
 @pytest.fixture
-def mozwebqa(request, webdriver):
-    return TestSetup(request, webdriver)
+def mozwebqa(request, _sensitive_skiping, webdriver, selenium_base_url, mozwebqa_credentials):
+    return TestSetup(request, webdriver, selenium_base_url, mozwebqa_credentials)
 
 
 def pytest_addoption(parser):
-
     parser.addini('selenium_base_url', 'base url for the selenium web tests')
 
     group = parser.getgroup('selenium', 'selenium')
@@ -246,21 +235,6 @@ def pytest_addoption(parser):
                      metavar='int',
                      help='use a proxy running on this port.')
 
-    group = parser.getgroup('credentials', 'credentials')
-    group._addoption("--credentials",
-                     action="store",
-                     dest='credentials_file',
-                     metavar='path',
-                     help="location of yaml file containing user credentials.")
-    group._addoption('--saucelabs',
-                     action='store',
-                     dest='sauce_labs_credentials_file',
-                     metavar='path',
-                     help='credendials file containing sauce labs username and api key.')
-
-
-
-
 
 def _debug_summary(debug):
     summary = []
@@ -275,7 +249,11 @@ class TestSetup:
     '''
     default_implicit_wait = 10
 
-    def __init__(self, request, webdriver):
+    def __init__(self, request, webdriver, base_url, credentials):
         self.request = request
         self.selenium = webdriver
+        self.base_url = base_url
+        self.credentials = credentials
+
+        self.timeout = request.node.config.option.webqatimeout
         self.selenium.implicitly_wait(self.default_implicit_wait)

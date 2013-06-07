@@ -28,7 +28,7 @@ def proxy_from_options(options):
         return NoProxy()
 
 
-def make_driver(item):
+def make_driver(item, *k):
     options = item.config.option
     capabilities = json.loads(options.capabilities)
     proxy = proxy_from_options(options)

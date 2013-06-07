@@ -13,12 +13,6 @@ setup(
             'resources/style.css',
             'resources/main.js',
             'resources/jquery.js']},
-    py_modules=[
-        'pytest_mozwebqa.pytest_mozwebqa',
-        'pytest_mozwebqa.credentials',
-        'pytest_mozwebqa.html_report',
-        'pytest_mozwebqa.selenium_client',
-        'pytest_mozwebqa.sauce_labs'],
     install_requires=[
         'pytest>=2.2.4',
         'selenium>=2.26.0',
@@ -30,6 +24,7 @@ setup(
             'mozwebqa = pytest_mozwebqa.pytest_mozwebqa',
             'mozwebqa_safety = pytest_mozwebqa.plugin_safety',
             'mozwebqa_reporting = pytest_mozwebqa.plugin_reporting',
+            'mozwebqa_credentials = pytest_mozwebqa.plugin_data',
         ]},
     license='Mozilla Public License 2.0 (MPL 2.0)',
     keywords='py.test pytest selenium saucelabs mozwebqa webqa qa mozilla',
