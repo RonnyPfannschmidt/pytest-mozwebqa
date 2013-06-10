@@ -6,4 +6,5 @@ build
 dist
 results
 .cache
+.idea
 ghostdriver.log
