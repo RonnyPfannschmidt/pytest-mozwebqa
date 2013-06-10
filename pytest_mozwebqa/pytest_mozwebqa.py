@@ -83,7 +83,6 @@ def pytest_runtest_makereport(__multicall__, item, call):
     if report.when == 'call':
         webdriver = getattr(item, '_webdriver', None)
         import selenium.webdriver
-        assert isinstance(webdriver, selenium.webdriver.Remote)
         if webdriver is not None:
             selenium.webdriver.PhantomJS
             report.session_id = webdriver.session_id
