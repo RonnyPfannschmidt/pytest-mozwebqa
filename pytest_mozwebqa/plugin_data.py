@@ -1,7 +1,7 @@
 import pytest
 
-def pytest_addoption(parser):
 
+def pytest_addoption(parser):
     group = parser.getgroup('credentials', 'credentials')
     group._addoption("--credentials",
                      action="store",
@@ -15,11 +15,11 @@ def pytest_addoption(parser):
                      help='credendials file containing sauce labs username and api key.')
 
 
-
 def read(filename):
-    stream = file(filename, 'r')
     import yaml
-    return yaml.safe_load(stream)
+    with open(filename, 'r') as stream:
+        return yaml.safe_load(stream)
+
 
 def maybe_read(filename):
     if filename is not None:
