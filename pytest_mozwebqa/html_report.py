@@ -20,6 +20,7 @@ from py.xml import raw
 import sauce_labs
 
 
+
 class HTMLReport(object):
     def __init__(self, config):
         logfile = os.path.expanduser(os.path.expandvars(config.option.webqa_report_path))
@@ -143,35 +144,10 @@ class HTMLReport(object):
             res.copy(target=logdir.join(resfile))
         return logdir
 
-    def append_pass(self, report):
-        self._appendrow('Passed', report)
-
-    def append_failure(self, report):
-        if "xfail" in report.keywords:
-            self._appendrow('XPassed', report)
-        else:
-            self._appendrow('Failed', report)
-
-    def append_error(self, report):
-        self._appendrow('Error', report)
-
-    def append_skipped(self, report):
-        if "xfail" in report.keywords:
-            self._appendrow('XFailed', report)
-        else:
-            self._appendrow('Skipped', report)
-
     def pytest_runtest_logreport(self, report):
-        if report.passed:
-            if report.when == 'call':
-                self.append_pass(report)
-        elif report.failed:
-            if report.when != "call":
-                self.append_error(report)
-            else:
-                self.append_failure(report)
-        elif report.skipped:
-            self.append_skipped(report)
+        result = _categorize_report(report)
+        if result is not None:
+            self._appendrow(result, report)
 
     def pytest_sessionstart(self, session):
         self.suite_start_time = time.time()
@@ -276,3 +252,20 @@ def _result_table(logs):
     ]
 
 
+
+def _categorize_report(report):
+    """
+    categorize a test report
+    :returns: result type if interesting else None
+    """
+    xfail = 'xfail' in report.keywords
+    if report.passed:
+        if report.when == 'call':
+            return 'Passed'
+    elif report.failed:
+        if report.when != "call":
+            return 'Error'
+        else:
+            return 'XPassed' if xfail else 'Failed'
+    elif report.skipped:
+        return 'XFailed' if xfail else 'Skipped'
