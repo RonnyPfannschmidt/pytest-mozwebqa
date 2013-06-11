@@ -12,7 +12,6 @@ import os
 import pkg_resources
 import py
 import time
-import shutil
 from base64 import decodestring as decode_b64
 
 
@@ -30,9 +29,10 @@ class HTMLReport(object):
         self._debug_path = 'debug'
         self.config = config
         self.test_logs = []
-        self.errors = self.failed = 0
-        self.passed = self.skipped = 0
-        self.xfailed = self.xpassed = 0
+        self.counts = OrderedDict.fromkeys(
+            'error failed passed skipped xfailed xpassed'.split(),
+            0
+        )
         self.resources = ('style.css', 'jquery.js', 'main.js')
 
     def _debug_paths(self, testclass, testmethod):
@@ -44,6 +44,8 @@ class HTMLReport(object):
         return (relative_link, full_path)
 
     def _appendrow(self, result, report):
+        self.counts[result.lower()] += 1
+
         (testclass, testmethod) = sauce_labs.split_class_and_test_names(report.nodeid)
         time = getattr(report, 'duration', 0.0)
 
@@ -144,28 +146,22 @@ class HTMLReport(object):
         return logdir
 
     def append_pass(self, report):
-        self.passed += 1
         self._appendrow('Passed', report)
 
     def append_failure(self, report):
         if "xfail" in report.keywords:
             self._appendrow('XPassed', report)
-            self.xpassed += 1
         else:
             self._appendrow('Failed', report)
-            self.failed += 1
 
     def append_error(self, report):
         self._appendrow('Error', report)
-        self.errors += 1
 
     def append_skipped(self, report):
         if "xfail" in report.keywords:
             self._appendrow('XFailed', report)
-            self.xfailed += 1
         else:
             self._appendrow('Skipped', report)
-            self.skipped += 1
 
     def pytest_runtest_logreport(self, report):
         if report.passed:
@@ -188,7 +184,7 @@ class HTMLReport(object):
 
         suite_stop_time = time.time()
         suite_time_delta = suite_stop_time - self.suite_start_time
-        numtests = self.passed + self.failed + self.xpassed + self.xfailed
+        numtests = sum(self.counts.values())
 
         option = self.config.option
 
@@ -231,13 +227,13 @@ class HTMLReport(object):
                 html.p(
                     '%i tests ran in %i seconds.' % (numtests, suite_time_delta),
                     html.br(),
-                    html.span('%i passed' % self.passed, class_='passed'), ', ',
-                    html.span('%i skipped' % self.skipped, class_='skipped'), ', ',
-                    html.span('%i failed' % self.failed, class_='failed'), ', ',
-                    html.span('%i errors' % self.errors, class_='error'), '.',
+                    html.span('%(passed)i passed' % self.counts, class_='passed'), ', ',
+                    html.span('%(skipped)i skipped' % self.counts, class_='skipped'), ', ',
+                    html.span('%(failed)i failed' % self.counts, class_='failed'), ', ',
+                    html.span('%(error)i errors' % self.counts, class_='error'), '.',
                     html.br(),
-                    html.span('%i expected failures' % self.xfailed, class_='skipped'), ', ',
-                    html.span('%i unexpected passes' % self.xpassed, class_='failed'), '.'),
+                    html.span('%(xpassed)i expected failures' % self.counts, class_='skipped'), ', ',
+                    html.span('%(xfailed)i unexpected passes' % self.counts, class_='failed'), '.'),
                 html.h2('Results'),
                 html.table([
                     html.thead(html.tr([
@@ -246,7 +242,7 @@ class HTMLReport(object):
                         html.th('Name', class_='sortable', col='name'),
                         html.th('Duration', class_='sortable numeric', col='duration'),
                         html.th('Links')]), id='results-table-head'),
-                    html.tbody(*self.test_logs, id='results-table-body')], id='results-table')))
+                    html.tbody(self.test_logs, id='results-table-body')], id='results-table')))
 
         logfile.write('<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">' + doc.unicode(indent=2))
         logfile.close()
