@@ -82,9 +82,7 @@ def pytest_runtest_makereport(__multicall__, item, call):
     report = __multicall__.execute()
     if report.when == 'call':
         webdriver = getattr(item, '_webdriver', None)
-        import selenium.webdriver
         if webdriver is not None:
-            selenium.webdriver.PhantomJS
             report.session_id = webdriver.session_id
             if (
                         report.skipped and 'xfail' in report.keywords or
