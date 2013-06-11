@@ -5,7 +5,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import cgi
-from collections import OrderedDict
 import datetime
 import os
 
@@ -29,7 +28,7 @@ class HTMLReport(object):
         self._debug_path = 'debug'
         self.config = config
         self.test_logs = []
-        self.counts = OrderedDict.fromkeys(
+        self.counts = dict.fromkeys(
             'error failed passed skipped xfailed xpassed'.split(),
             0
         )
@@ -46,10 +45,10 @@ class HTMLReport(object):
     def _appendrow(self, result, report):
         self.counts[result.lower()] += 1
 
-        (testclass, testmethod) = sauce_labs.split_class_and_test_names(report.nodeid)
+        testclass, testmethod = sauce_labs.split_class_and_test_names(report.nodeid)
         time = getattr(report, 'duration', 0.0)
 
-        links = OrderedDict()
+        links = {}
 
         def add_link(text, link):
             links[text] = link
@@ -59,7 +58,6 @@ class HTMLReport(object):
                 with full_path.join(filename).open('wb') as fp:
                     fp.write(content)
             add_link(name, os.path.join(relative_link, filename))
-
 
         debug = getattr(report, 'debug', {})
         # we only use the last item of the list in values
