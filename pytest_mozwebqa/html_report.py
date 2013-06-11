@@ -4,15 +4,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import base64
 import cgi
+from collections import OrderedDict
 import datetime
 import os
+
 import pkg_resources
 import py
 import time
-import sys
 import shutil
+from base64 import decodestring as decode_b64
+
 
 from py.xml import html
 from py.xml import raw
@@ -24,7 +26,7 @@ class HTMLReport(object):
 
     def __init__(self, config):
         logfile = os.path.expanduser(os.path.expandvars(config.option.webqa_report_path))
-        self.logfile = os.path.normpath(logfile)
+        self.logfile = py.path.local(logfile)
         self._debug_path = 'debug'
         self.config = config
         self.test_logs = []
@@ -34,55 +36,60 @@ class HTMLReport(object):
         self.resources = ('style.css', 'jquery.js', 'main.js')
 
     def _debug_paths(self, testclass, testmethod):
-        root_path = os.path.join(os.path.dirname(self.logfile), self._debug_path)
-        root_path = os.path.normpath(os.path.expanduser(os.path.expandvars(root_path)))
-        test_path = os.path.join(testclass.replace('.', '_'), testmethod)
-        full_path = os.path.join(root_path, test_path)
-        if not os.path.exists(full_path):
-            os.makedirs(full_path)
-        relative_path = os.path.join(self._debug_path, test_path)
-        absolute_path = os.path.join(root_path, test_path)
-        return (relative_path, full_path)
+        root_path = self.logfile.dirpath().join(self._debug_path)
+        test_parts = testclass.replace('.', '_'), testmethod
+        full_path = root_path.join(*test_parts)
+        full_path.ensure(dir=True)
+        relative_link = os.path.join(self._debug_path, *test_parts)
+        return (relative_link, full_path)
 
     def _appendrow(self, result, report):
-        import pytest_mozwebqa
         (testclass, testmethod) = sauce_labs.split_class_and_test_names(report.nodeid)
         time = getattr(report, 'duration', 0.0)
 
-        links = {}
-        if hasattr(report, 'debug') and any(report.debug.values()):
-            (relative_path, full_path) = self._debug_paths(testclass, testmethod)
+        links = OrderedDict()
 
-            if report.debug['screenshots']:
-                filename = 'screenshot.png'
-                f = open(os.path.join(full_path, filename), 'wb')
-                f.write(base64.decodestring(report.debug['screenshots'][-1]))
-                links.update({'Screenshot': os.path.join(relative_path, filename)})
+        def add_link(text, link):
+            links[text] = link
 
-            if report.debug['html']:
-                filename = 'html.txt'
-                f = open(os.path.join(full_path, filename), 'wb')
-                f.write(report.debug['html'][-1])
-                links.update({'HTML': os.path.join(relative_path, filename)})
+        def add_file(name, filename, content=None):
+            if content is not None:
+                with full_path.join(filename).open('wb') as fp:
+                    fp.write(content)
+            add_link(name, os.path.join(relative_link, filename))
+
+
+        debug = getattr(report, 'debug', {})
+        # we only use the last item of the list in values
+        debug = dict((k, v[-1]) for k, v in debug.items() if v)
+        if debug:
+            (relative_link, full_path) = self._debug_paths(testclass, testmethod)
+
+            if 'screenshots' in debug:
+                add_file('Screenshot', 'screenshot.png',
+                        decode_b64(debug['screenshots']))
+
+            if 'html' in debug:
+                add_file('HTML', 'html.txt', debug['html'])
 
             # Log may contain passwords, etc so we only capture it for tests marked as public
-            if report.debug['logs'] and 'public' in report.keywords:
-                filename = 'log.txt'
-                f = open(os.path.join(full_path, filename), 'wb')
-                f.write(report.debug['logs'][-1])
-                links.update({'Log': os.path.join(relative_path, filename)})
+            if 'logs' in debug:
+                if 'public' in report.keywords:
+                    add_file('Log','log.txt', debug['logs'])
+                else:
+                    add_link('Log not public', '#')
 
-            if report.debug['urls']:
-                links.update({'Failing URL': report.debug['urls'][-1]})
+            if 'urls' in debug:
+                add_link('Failing URL', debug['urls'])
 
         if self.config.option.sauce_labs_credentials_file and hasattr(report, 'session_id'):
             self.sauce_labs_job = sauce_labs.Job(report.session_id)
 
         if hasattr(self, 'sauce_labs_job'):
-            links['Sauce Labs Job'] = self.sauce_labs_job.url
+            add_link('Sauce Labs Job', self.sauce_labs_job.url)
 
         links_html = []
-        for name, path in links.iteritems():
+        for name, path in links.items():
             links_html.append(html.a(name, href=path))
             links_html.append(' ')
 
@@ -125,16 +132,16 @@ class HTMLReport(object):
             html.td(additional_html, class_='debug')], class_=result.lower() + ' results-table-row'))
 
     def _make_report_dir(self):
-        logfile_dirname = os.path.dirname(self.logfile)
-        if logfile_dirname and not os.path.exists(logfile_dirname):
-            os.makedirs(logfile_dirname)
+        logdir = self.logfile.dirpath()
+        logdir.ensure(dir=True)
         # copy across the static resources
-        for file in self.resources:
-            shutil.copyfile(
+        for resfile in self.resources:
+            res = py.path.local(
                 pkg_resources.resource_filename(
-                    __name__, os.path.sep.join(['resources', file])),
-                os.path.abspath(os.path.join(logfile_dirname, file)))
-        return logfile_dirname
+                    __name__, os.path.join('resources', resfile),
+                ))
+            res.copy(target=logdir.join(resfile))
+        return logdir
 
     def append_pass(self, report):
         self.passed += 1
@@ -177,7 +184,7 @@ class HTMLReport(object):
 
     def pytest_sessionfinish(self, session, exitstatus, __multicall__):
         self._make_report_dir()
-        logfile = py.std.codecs.open(self.logfile, 'w', encoding='utf-8')
+        logfile = py.std.codecs.open(str(self.logfile), 'w', encoding='utf-8')
 
         suite_stop_time = time.time()
         suite_time_delta = suite_stop_time - self.suite_start_time
