@@ -61,7 +61,7 @@ def testNoDebugOnXPass(testdir, tmpdir, webserver):
         @pytest.mark.xfail
         @pytest.mark.nondestructive
         def test_debug(webtext):
-            assert webtext == 'Success!'
+            assert webtext == u'Success!'
     """)
     testdir.quick_qa(file_test, failed=1)
     assert not tmpdir.join('debug').check()
@@ -73,7 +73,7 @@ def testNoDebugOnSkip(testdir, tmpdir):
         @pytest.mark.skipif('True')
         @pytest.mark.nondestructive
         def test_debug(webtext):
-            assert webtext == 'Success!'
+            assert webtext == u'Success!'
     """)
     reprec = testdir.quick_qa(file_test, skipped=1)
     assert not tmpdir.join('debug').check()
@@ -84,7 +84,7 @@ def testDebugWithReportSubdirectory(testdir):
         import pytest
         @pytest.mark.nondestructive
         def test_debug(webtext):
-            assert webtext != 'Success!'
+            assert webtext != u'Success!'
     """)
     report_subdirectory = 'report'
     reprec = testdir.quick_qa(
