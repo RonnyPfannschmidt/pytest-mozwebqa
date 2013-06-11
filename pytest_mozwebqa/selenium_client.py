@@ -89,15 +89,13 @@ def remote_driver(options, capabilities):
 
 def chrome_driver(options, capabilities):
     chrome_options = create_chrome_options(options)
+    extra = {}
     if options.chrome_path:
-        return webdriver.Chrome(
-            executable_path=options.chrome_path,
-            chrome_options=chrome_options,
-            desired_capabilities=capabilities or None)
-    else:
-        return webdriver.Chrome(
-            chrome_options=options,
-            desired_capabilities=capabilities or None)
+        extra['executable_path'] = options.chrome_path
+    return webdriver.Chrome(
+        chrome_options=chrome_options,
+        desired_capabilities=capabilities or None,
+        **extra)
 
 
 def firefox_driver(options, capabilities):
@@ -123,9 +121,9 @@ def create_firefox_profile(options):
     return profile
 
 
-def create_chrome_options(options):
+def create_chrome_options(pytest_options):
+    options_from_json = json.loads(pytest_options.chrome_options)
     options = webdriver.ChromeOptions()
-    options_from_json = json.loads(options.chrome_options)
 
     if 'arguments' in options_from_json:
         for args_ in options_from_json['arguments']:
@@ -134,7 +132,7 @@ def create_chrome_options(options):
     if 'binary_location' in options_from_json:
         options.binary_location = options_from_json['binary_location']
 
-    for extension in options.extension_paths:
+    for extension in pytest_options.extension_paths:
         options.add_extension(extension)
 
     return options
