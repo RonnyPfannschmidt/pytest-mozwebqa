@@ -77,8 +77,6 @@ class HTMLReport(object):
 
         if self.config.option.sauce_labs_credentials_file and hasattr(report, 'session_id'):
             self.sauce_labs_job = sauce_labs.Job(report.session_id)
-
-        if hasattr(self, 'sauce_labs_job'):
             add_link('Sauce Labs Job', self.sauce_labs_job.url)
 
         links_html = []
