@@ -75,8 +75,11 @@ class HTMLReport(object):
             if 'urls' in debug:
                 add_link('Failing URL', debug['urls'])
 
-        if self.config.option.sauce_labs_credentials_file and hasattr(report, 'session_id'):
-            self.sauce_labs_job = sauce_labs.Job(report.session_id)
+        session_id = getattr(report, 'session_id', None)
+        credentials_file = self.config.option.sauce_labs_credentials_file
+
+        if credentials_file and session_id is not None:
+            self.sauce_labs_job = sauce_labs.Job(session_id)
             add_link('Sauce Labs Job', self.sauce_labs_job.url)
 
         links_html = []
