@@ -72,13 +72,6 @@ class HTMLReport(object):
             if 'html' in debug:
                 add_file('HTML', 'html.txt', debug['html'])
 
-            # Log may contain passwords, etc so we only capture it for tests marked as public
-            if 'logs' in debug:
-                if 'public' in report.keywords:
-                    add_file('Log', 'log.txt', debug['logs'])
-                else:
-                    add_link('Log not public', '#')
-
             if 'urls' in debug:
                 add_link('Failing URL', debug['urls'])
 
