@@ -84,7 +84,7 @@ class HTMLReport(object):
 
         links_html = []
         for name, path in links.items():
-            links_html.append(html.a(name, href=path))
+            links_html.append(html.a(name, href=path, target='_blank'))
             links_html.append(' ')
 
         additional_html = []
