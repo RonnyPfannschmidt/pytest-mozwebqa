@@ -28,8 +28,7 @@ def pytest_sessionstart(session):
 
 
 def _get_url(config):
-    return config.option.base_url \
-        or request.config.getini('selenium_base_url')
+    return config.option.base_url or config.getini('selenium_base_url')
 
 
 @pytest.fixture(scope='session')
@@ -50,7 +49,7 @@ def _verify_base_url(request):
     when the selenium_base_url fixture is overwritten
     """
     option = request.config.option
-    url = geturl(request.config)
+    url = _get_url(request.config)
     if url and not option.skip_url_check:
         r = requests.get(url, verify=False)
         if r.status_code not in (200, 401):
