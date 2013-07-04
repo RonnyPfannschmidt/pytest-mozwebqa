@@ -42,6 +42,13 @@ def selenium_base_url(request):
 
 @pytest.fixture(scope='session', autouse=True)
 def _verify_base_url(request):
+    """
+    verify a configuration-specified url.
+    this explicitly goes the same way as the fixture
+    instead of using the fixture
+    in order to avoid veryfication
+    when the selenium_base_url fixture is overwritten
+    """
     option = request.config.option
     url = geturl(request.config)
     if url and not option.skip_url_check:
