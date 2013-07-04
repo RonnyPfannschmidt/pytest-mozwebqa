@@ -158,7 +158,7 @@ def pytest_addoption(parser):
                      dest='capabilities',
                      metavar='str',
                      default='{}',
-                     help='json string of additional capabilties to set (webdriver).')
+                     help='json string of additional capabilties to set .')
     group._addoption('--chromepath',
                      action='store',
                      dest='chrome_path',
@@ -174,24 +174,24 @@ def pytest_addoption(parser):
                      dest='firefox_preferences',
                      metavar='str',
                      default='{}',
-                     help='json string of firefox preferences to set (webdriver).')
+                     help='json string of firefox preferences to set.')
     group._addoption('--profilepath',
                      action='store',
                      dest='profile_path',
                      metavar='str',
-                     help='path to the firefox profile to use (webdriver).')
+                     help='path to the firefox profile to use.')
     group._addoption('--extension',
                      action='append',
                      dest='extension_paths',
                      metavar='str',
                      default=[],
-                     help='path to browser extension to install (webdriver).')
+                     help='path to browser extension to install.')
     group._addoption('--chromeopts',
                      action='store',
                      dest='chrome_options',
                      metavar='str',
                      default='{}',
-                     help='json string of google chrome options to set (webdriver).')
+                     help='json string of google chrome options to set.')
     group._addoption('--operapath',
                      action='store',
                      dest='opera_path',
@@ -201,16 +201,16 @@ def pytest_addoption(parser):
                      action='store',
                      dest='browser_name',
                      metavar='str',
-                     help='target browser name (webdriver).')
+                     help='target browser name.')
     group._addoption('--browserver',
                      action='store',
                      dest='browser_version',
                      metavar='str',
-                     help='target browser version (webdriver).')
+                     help='target browser version.')
     group._addoption('--platform',
                      action='store',
                      metavar='str',
-                     help='target platform (webdriver).')
+                     help='target platform.')
     group._addoption('--webqatimeout',
                      action='store',
                      type='int',
