@@ -35,9 +35,7 @@ def make_driver(item, credentials):
     build = options.build
 
 
-    config = ConfigParser.ConfigParser(defaults={'tags': ''})
-    config.read('mozwebqa.cfg')
-    tags = config.get('DEFAULT', 'tags').split(',')
+    tags = item.config.getini('sauce_labs_tags')
     from _pytest.mark import MarkInfo
     tags.extend(mark.name for mark in keywords.values()
                 if isinstance(mark, MarkInfo))

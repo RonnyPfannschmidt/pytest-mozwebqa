@@ -13,7 +13,9 @@ def pytest_addoption(parser):
                      dest='sauce_labs_credentials_file',
                      metavar='path',
                      help='credendials file containing sauce labs username and api key.')
-
+    parser.addini('sauce_labs_tags',
+            'extra sauce_labs tags to add to each tests when reporting to saucelabs',
+            type='args')
 
 def read(filename):
     import yaml
