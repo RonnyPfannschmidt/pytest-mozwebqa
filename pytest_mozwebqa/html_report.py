@@ -20,8 +20,8 @@ from py.xml import raw
 import sauce_labs
 
 
-
 class HTMLReport(object):
+
     def __init__(self, config):
         logfile = os.path.expanduser(os.path.expandvars(config.option.webqa_report_path))
         self.logfile = py.path.local(logfile)
