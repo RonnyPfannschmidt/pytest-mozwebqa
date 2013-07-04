@@ -106,7 +106,7 @@ def pytest_runtest_makereport(__multicall__, item, call):
 
 
 @pytest.fixture
-def mozwebqa(request, _sensitive_skiping, webdriver, selenium_base_url, mozwebqa_credentials):
+def mozwebqa(request, _sensitive_skipping, webdriver, selenium_base_url, mozwebqa_credentials):
     return TestSetup(request, webdriver, selenium_base_url, mozwebqa_credentials)
 
 

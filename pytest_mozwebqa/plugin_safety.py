@@ -34,7 +34,7 @@ def pytest_configure(config):
 
 
 @pytest.fixture
-def _sensitive_skiping(request, selenium_base_url):
+def _sensitive_skipping(request, selenium_base_url):
     if request.config.option.skip_url_check:
         return
 
