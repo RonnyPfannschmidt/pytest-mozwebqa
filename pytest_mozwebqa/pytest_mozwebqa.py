@@ -129,7 +129,6 @@ def pytest_addoption(parser):
     group._addoption('--baseurl',
                      action='store',
                      dest='base_url',
-                     default=None,
                      metavar='url',
                      help='base url for the application under test.')
     group._addoption('--skipurlcheck',
