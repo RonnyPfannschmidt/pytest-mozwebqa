@@ -27,10 +27,14 @@ def pytest_sessionstart(session):
         option.proxy_port = option.zap_port
 
 
+def _get_url(config):
+    return config.option.base_url \
+        or request.config.getini('selenium_base_url')
+
+
 @pytest.fixture(scope='session')
 def selenium_base_url(request):
-    url = (request.config.option.base_url or
-           request.config.getini('selenium_base_url'))
+    url = _get_url(request.config)
     if not url:
         raise pytest.UsageError('--baseurl must be specified.')
     return url
@@ -39,12 +43,13 @@ def selenium_base_url(request):
 @pytest.fixture(scope='session', autouse=True)
 def _verify_base_url(request):
     option = request.config.option
-    if option.base_url and not option.skip_url_check:
-        r = requests.get(option.base_url, verify=False)
+    url = geturl(request.config)
+    if url and not option.skip_url_check:
+        r = requests.get(url, verify=False)
         if r.status_code not in (200, 401):
             raise pytest.UsageError(
                 'Base URL did not return status code 200 or 401. '
-                '(URL: %s, Response: %s)' % (option.base_url, r.status_code))
+                '(URL: %s, Response: %s)' % (url, r.status_code))
 
 
 def pytest_runtest_setup(item):
