@@ -60,20 +60,18 @@ class HTMLReport(object):
             add_link(name, os.path.join(relative_link, filename))
 
         debug = getattr(report, 'debug', {})
-        # we only use the last item of the list in values
-        debug = dict((k, v[-1]) for k, v in debug.items() if v)
         if debug:
             (relative_link, full_path) = self._debug_paths(testclass, testmethod)
 
-            if 'screenshots' in debug:
+            if 'screenshot' in debug:
                 add_file('Screenshot', 'screenshot.png',
-                         decode_b64(debug['screenshots']))
+                         decode_b64(debug['screenshot']))
 
             if 'html' in debug:
                 add_file('HTML', 'html.txt', debug['html'])
 
-            if 'urls' in debug:
-                add_link('Failing URL', debug['urls'])
+            if 'url' in debug:
+                add_link('Failing URL', debug['url'])
 
         session_id = getattr(report, 'session_id', None)
         credentials_file = self.config.option.sauce_labs_credentials_file

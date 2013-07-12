@@ -60,13 +60,6 @@ def _verify_base_url(request):
 
 def pytest_runtest_setup(item):
     option = item.config.option
-    item.debug = {
-        'urls': [],
-        'screenshots': [],
-        'html': [],
-        'logs': [],
-        'network_traffic': []}
-
     # configure test proxies
     if hasattr(item.config, 'browsermob_test_proxy'):
         option.proxy_host = item.config.option.bmp_host
@@ -98,14 +91,13 @@ def pytest_runtest_makereport(__multicall__, item, call):
             if (
                         report.skipped and 'xfail' in report.keywords or
                         report.failed and 'xfail' not in report.keywords):
-                url = webdriver.current_url
-                item.debug['urls'].append(url)
-                screenshot = webdriver.get_screenshot_as_base64()
-                item.debug['screenshots'].append(screenshot)
-                html = webdriver.page_source
-                item.debug['html'].append(html)
-                report.sections.append(('pytest-mozwebqa', _debug_summary(item.debug)))
-            report.debug = item.debug
+                debug = {
+                    'html': webdriver.page_source,
+                    'screenshot': webdriver.get_screenshot_as_base64(),
+                    'url': webdriver.current_url
+                }
+                report.debug = debug
+                report.sections.append(('pytest-mozwebqa', _debug_summary(debug)))
             if hasattr(item, 'sauce_labs_credentials') and report.session_id:
                 result = {'passed': report.passed or (report.failed and 'xfail' in report.keywords)}
                 import sauce_labs
@@ -240,8 +232,8 @@ def pytest_addoption(parser):
 
 def _debug_summary(debug):
     summary = []
-    if debug['urls']:
-        summary.append('Failing URL: %s' % debug['urls'][-1])
+    if 'url' in debug:
+        summary.append('Failing URL: %s' % debug['url'])
     return '\n'.join(summary)
 
 
