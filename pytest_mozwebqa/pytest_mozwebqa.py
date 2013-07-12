@@ -83,9 +83,8 @@ def pytest_runtest_makereport(__multicall__, item):
         webdriver = getattr(item, '_webdriver', None)
         if webdriver is not None:
             report.session_id = webdriver.session_id
-            if (
-                        report.skipped and 'xfail' in report.keywords or
-                        report.failed and 'xfail' not in report.keywords):
+            xfail = 'xfail' in report.keywords
+            if (report.skipped and xfail) or (report.failed and not xfail):
                 debug = {
                     'html': webdriver.page_source,
                     'screenshot': webdriver.get_screenshot_as_base64(),
@@ -94,7 +93,7 @@ def pytest_runtest_makereport(__multicall__, item):
                 report.debug = debug
                 report.sections.append(('pytest-mozwebqa', _debug_summary(debug)))
             if hasattr(item, 'sauce_labs_credentials') and report.session_id:
-                result = {'passed': report.passed or (report.failed and 'xfail' in report.keywords)}
+                result = {'passed': report.passed or (report.failed and xfail)}
                 import sauce_labs
 
                 sauce_labs.Job(report.session_id).send_result(
