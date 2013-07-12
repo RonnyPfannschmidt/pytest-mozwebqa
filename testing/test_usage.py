@@ -53,7 +53,8 @@ def testShouldFailWithoutSauceLabsUser(testdir, url_failtest):
     sauce_labs_credentials = testdir.makefile('.yaml', sauce_labs="""
         api-key: api-key
     """)
-    out = url_failtest('--saucelabs=%s' % sauce_labs_credentials)
+    out = url_failtest('--saucelabs=%s' % sauce_labs_credentials,
+                       '--driver=sauce_labs')
     assert out == "KeyError: 'username'"
 
 
@@ -61,7 +62,8 @@ def testShouldFailWithoutSauceLabsKey(testdir, url_failtest):
     sauce_labs_credentials = testdir.makefile('.yaml', sauce_labs="""
         username: username
     """)
-    out = url_failtest('--saucelabs=%s' % sauce_labs_credentials)
+    out = url_failtest('--saucelabs=%s' % sauce_labs_credentials,
+                       '--driver=sauce_labs')
     assert out == "KeyError: 'api-key'"
 
 
@@ -70,7 +72,8 @@ def testShouldFailWithBlankSauceLabsUser(testdir, url_failtest):
         username:
         api-key: api-key
     """)
-    out = url_failtest('--saucelabs=%s' % sauce_labs_credentials)
+    out = url_failtest('--saucelabs=%s' % sauce_labs_credentials,
+                       '--driver=sauce_labs')
     assert out == 'UsageError: username must be specified in the sauce labs ' \
                   'credentials file.'
 
@@ -80,7 +83,8 @@ def testShouldFailWithBlankSauceLabsKey(testdir, url_failtest):
         username: username
         api-key:
     """)
-    out = url_failtest('--saucelabs=%s' % sauce_labs_credentials)
+    out = url_failtest('--saucelabs=%s' % sauce_labs_credentials,
+                       '--driver=sauce_labs')
     assert out == 'UsageError: api-key must be specified in the sauce labs ' \
                   'credentials file.'
 
