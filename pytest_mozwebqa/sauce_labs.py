@@ -55,18 +55,18 @@ def make_driver(item, credentials):
 
 
 def start_webdriver_client(credentials, capabilities):
-        if not credentials['username']:
-            raise pytest.UsageError('username must be specified in the sauce labs credentials file.')
+    if not credentials['username']:
+        raise pytest.UsageError('username must be specified in the sauce labs credentials file.')
 
-        if not credentials['api-key']:
-            raise pytest.UsageError('api-key must be specified in the sauce labs credentials file.')
+    if not credentials['api-key']:
+        raise pytest.UsageError('api-key must be specified in the sauce labs credentials file.')
 
-        executor = 'http://%s:%s@ondemand.saucelabs.com:80/wd/hub' % (
-            credentials['username'],
-            credentials['api-key'])
-        return webdriver.Remote(
-            command_executor=executor,
-            desired_capabilities=capabilities)
+    executor = 'http://%s:%s@ondemand.saucelabs.com:80/wd/hub' % (
+        credentials['username'],
+        credentials['api-key'])
+    return webdriver.Remote(
+        command_executor=executor,
+        desired_capabilities=capabilities)
 
 
 class Job(object):

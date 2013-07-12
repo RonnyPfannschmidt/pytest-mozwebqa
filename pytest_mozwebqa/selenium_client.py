@@ -29,10 +29,14 @@ def proxy_from_options(options):
 
 
 def make_driver(item, mozwebqa_credentials):
-    if mozwebqa_credentials:
+    # hacj
+    item.mozwebqa_credentials = mozwebqa_credentials
+    options = item.config.option
+
+    if options.driver.lower() == 'sauce_labs':
         from . import sauce_labs
         return sauce_labs.make_driver(item, mozwebqa_credentials)
-    options = item.config.option
+
     capabilities = json.loads(options.capabilities)
     proxy = proxy_from_options(options)
     proxy.add_to_capabilities(capabilities)
