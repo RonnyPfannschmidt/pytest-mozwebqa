@@ -28,7 +28,10 @@ def proxy_from_options(options):
         return NoProxy()
 
 
-def make_driver(item, *k):
+def make_driver(item, mozwebqa_credentials):
+    if mozwebqa_credentials:
+        from . import sauce_labs
+        return sauce_labs.make_driver(item, mozwebqa_credentials)
     options = item.config.option
     capabilities = json.loads(options.capabilities)
     proxy = proxy_from_options(options)

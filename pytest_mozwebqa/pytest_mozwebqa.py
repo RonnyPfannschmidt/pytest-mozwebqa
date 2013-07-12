@@ -69,20 +69,15 @@ def pytest_runtest_setup(item):
 #FIXME: needs autouse till test setup/teardown is cleaned up
 @pytest.fixture
 def webdriver(request, mozwebqa_saucelab_credentials):
-    if mozwebqa_saucelab_credentials is not None:
-        from sauce_labs import make_driver
-    else:
-        from selenium_client import make_driver
+    from .selenium_client import make_driver
 
-    item = request.node
-    webdriver = make_driver(item, mozwebqa_saucelab_credentials)
-    item._webdriver = webdriver
+    webdriver = make_driver(request.node, mozwebqa_saucelab_credentials)
+    request.node._webdriver = webdriver
     request.addfinalizer(lambda: webdriver.quit())
     return webdriver
-    #XXX: return value?
 
 
-def pytest_runtest_makereport(__multicall__, item, call):
+def pytest_runtest_makereport(__multicall__, item):
     report = __multicall__.execute()
     if report.when == 'call':
         webdriver = getattr(item, '_webdriver', None)
