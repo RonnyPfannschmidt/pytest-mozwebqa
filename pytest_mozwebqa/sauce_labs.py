@@ -7,10 +7,8 @@
 import httplib
 import json
 
-import ConfigParser
 import pytest
 from py.xml import html
-from selenium import selenium
 from selenium import webdriver
 
 
